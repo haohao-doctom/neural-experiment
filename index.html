@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>神经网络实验平台 · 其实很简单</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
+        body { background: #f6f9fc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .platform-card { max-width: 1300px; width: 100%; background: white; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,20,40,0.12); padding: 32px 36px 40px; }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 28px; border-bottom: 2px solid #eef3f8; padding-bottom: 18px; }
+        .header h1 { font-size: 28px; font-weight: 600; color: #0a2647; display: flex; align-items: center; gap: 10px; }
+        .header h1 i { color: #2b7be4; font-size: 28px; }
+        .header .badge { background: #d4e2fc; color: #1a4c8a; padding: 8px 18px; border-radius: 60px; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+
+        .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 8px; }
+        @media (max-width: 880px) { .demo-grid { grid-template-columns: 1fr; gap: 32px; } }
+
+        .case-panel { background: #ffffff; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,0.04); border: 1px solid #e9f0f7; padding: 24px 22px 28px; }
+        .panel-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; color: #0b2b4a; margin-bottom: 16px; border-bottom: 1px dashed #dce6f0; padding-bottom: 12px; }
+        .panel-title i { font-size: 22px; color: #2b7be4; width: 32px; }
+        .panel-title small { font-weight: 400; font-size: 14px; color: #5f7d9c; margin-left: 6px; }
+
+        .input-area { background: #f9fbfe; border-radius: 20px; padding: 18px 16px 16px; margin-bottom: 22px; }
+        .input-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 10px; margin-top: 6px; }
+
+        .file-upload { background: white; border: 1px solid #ccdcee; border-radius: 60px; padding: 6px 18px 6px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.15s; flex: 1 1 160px; }
+        .file-upload i { color: #2b7be4; }
+        .file-upload:hover { background: #edf4fe; border-color: #8ab3e6; }
+        .file-upload input { display: none; }
+
+        .btn { background: white; border: 1px solid #b6cee9; border-radius: 60px; padding: 8px 22px; font-weight: 500; font-size: 14px; color: #1c4b7a; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.15s; }
+        .btn-primary { background: #1a5fb0; border-color: #1a5fb0; color: white; box-shadow: 0 4px 10px rgba(26,95,176,0.2); }
+        .btn-primary:hover { background: #124a8a; transform: scale(0.97); }
+        .btn-success { background: #1a8b4c; border-color: #1a8b4c; color: white; box-shadow: 0 4px 10px rgba(26,139,76,0.2); }
+        .btn-success:hover { background: #0f6d3a; transform: scale(0.97); }
+        .btn-danger { background: #b02a1a; border-color: #b02a1a; color: white; }
+        .btn-outline { background: transparent; border: 1px solid #b0c8e3; }
+
+        .output-area { background: #f2f6fd; border-radius: 20px; padding: 18px 18px 16px; margin: 6px 0 16px; border-left: 4px solid #2b7be4; }
+        .output-row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 20px; }
+        .result-tag { background: white; border-radius: 60px; padding: 10px 22px; font-weight: 600; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: inline-flex; align-items: center; gap: 10px; }
+        .result-tag i { color: #1f6ed4; }
+        .confidence { background: #e3edfa; padding: 6px 18px; border-radius: 60px; font-size: 15px; font-weight: 500; }
+        .result-match { color: #1a8b4c; }
+        .result-not-match { color: #b02a1a; }
+
+        .param-control { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 12px; margin: 14px 0 10px; padding: 10px 0 4px; border-top: 1px solid #e4edf6; }
+        .param-control .ctrl-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .demo-hint { font-size: 13px; color: #4d6f91; background: #eef4fb; padding: 6px 18px; border-radius: 60px; display: inline-flex; align-items: center; gap: 8px; }
+        .demo-hint i { color: #2b7be4; }
+        .demo-tip { font-size: 13px; background: #d9e7fc; border-radius: 50px; padding: 4px 14px; color: #00337a; display: inline-block; }
+        .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
+        .footnote i { color: #2b7be4; margin-right: 4px; }
+        .visual-placeholder { background: #e9f0fa; border-radius: 14px; padding: 12px 14px; margin-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; color: #1c4270; }
+        .visual-placeholder i { font-size: 20px; color: #2b7be4; }
+        .pulse-dot { display: inline-block; width: 10px; height: 10px; background: #1f8b4c; border-radius: 20px; margin-right: 6px; animation: pulse 1.8s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.3); } 100% { opacity: 0.5; transform: scale(0.9); } }
+
+        .photo-preview-area { display: flex; gap: 20px; margin: 10px 0; flex-wrap: wrap; }
+        .photo-box { flex: 1; min-width: 120px; background: white; border-radius: 16px; padding: 12px; text-align: center; border: 2px dashed #ccdcee; }
+        .photo-box img { max-width: 100%; height: auto; border-radius: 12px; max-height: 150px; }
+        .photo-box .placeholder-text { color: #a0b8d0; font-size: 13px; padding: 20px 0; }
+        .photo-box .label { font-size: 12px; color: #5f7d9c; margin-bottom: 6px; display: block; }
+
+        .slider-item { display: flex; align-items: center; gap: 8px 4px; flex: 1 0 100px; }
+        .slider-item span { font-size: 13px; color: #1f4970; font-weight: 500; min-width: 32px; }
+        input[type=range] { width: 100%; max-width: 120px; height: 5px; -webkit-appearance: none; background: #cbdae9; border-radius: 10px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #1f6ed4; border-radius: 20px; cursor: pointer; }
+        .value-badge { background: #dfe9f5; padding: 2px 12px; border-radius: 30px; font-size: 13px; font-weight: 500; color: #00337a; min-width: 38px; text-align: center; }
+
+        .slider-group { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; flex: 2 1 200px; }
+        .rec-list { width: 100%; background: white; border-radius: 16px; padding: 8px 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+        .rec-item { display: flex; justify-content: space-between; border-bottom: 1px solid #e5edf6; padding: 8px 4px; font-size: 15px; }
+        .rec-item:last-child { border: none; }
+        .rec-item .label { color: #1a3a57; }
+        .rec-item .score { background: #dae6f5; padding: 0 14px; border-radius: 50px; font-weight: 500; font-size: 13px; color: #00337a; }
+        .step-indicator { display: flex; gap: 12px; margin-bottom: 12px; }
+        .step-dot { padding: 4px 16px; border-radius: 30px; font-size: 13px; background: #e9edf4; color: #6a8aaa; }
+        .step-dot.active { background: #1a5fb0; color: white; }
+        .step-dot.done { background: #1a8b4c; color: white; }
+    </style>
+</head>
+<body>
+<div class="platform-card">
+
+    <div class="header">
+        <h1><i class="fas fa-brain"></i> 神经网络实验平台</h1>
+        <div class="badge"><i class="fas fa-sliders-h"></i> 输入 · 调参 · 输出</div>
+    </div>
+
+    <div class="demo-grid">
+
+        <!-- ========= 案例1：人脸识别（新流程） ========= -->
+        <div class="case-panel">
+            <div class="panel-title">
+                <i class="fas fa-user-check"></i> 校园人脸识别签到
+                <small>图像分类</small>
+            </div>
+
+            <div class="input-area">
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                    <i class="fas fa-upload" style="color:#1f6ed4;"></i>
+                    <span style="font-weight:500; font-size:15px;">步骤1：上传原始照片</span>
+                    <span class="demo-tip"><i class="fas fa-play"></i> 微课演示</span>
+                </div>
+                <div class="input-row">
+                    <div class="file-upload" onclick="document.getElementById('faceUpload').click();">
+                        <i class="fas fa-camera"></i> 选择照片
+                        <input type="file" accept="image/*" id="faceUpload" style="display:none;">
+                        <span style="margin-left:auto; font-size:12px; color:#4b6f92;" id="faceFileName">未选择</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; margin: 12px 0 8px;">
+                    <i class="fas fa-camera-retro" style="color:#1f6ed4;"></i>
+                    <span style="font-weight:500; font-size:15px;">步骤2：实时拍照比对</span>
+                </div>
+                <div class="input-row">
+                    <button class="btn btn-success" id="captureBtn"><i class="fas fa-camera"></i> 📸 拍照比对</button>
+                    <button class="btn btn-outline" id="resetFaceBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+                </div>
+            </div>
+
+            <!-- 照片预览 -->
+            <div class="photo-preview-area">
+                <div class="photo-box">
+                    <span class="label">📤 原始照片</span>
+                    <div id="originalPreview"><div class="placeholder-text">尚未上传</div></div>
+                </div>
+                <div class="photo-box">
+                    <span class="label">📸 实时拍照</span>
+                    <div id="capturedPreview"><div class="placeholder-text">等待拍照</div></div>
+                </div>
+            </div>
+
+            <div class="output-area">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
+                    <span style="font-weight:500; color:#0a2647;"><i class="fas fa-chart-simple"></i> 步骤3：识别结果</span>
+                    <span class="demo-tip"><i class="fas fa-sync-alt fa-fw"></i> 实时更新</span>
+                </div>
+                <div class="output-row" style="margin-top: 8px;">
+                    <div class="result-tag" id="faceResult">
+                        <i class="fas fa-id-card"></i> <span id="faceLabel">等待识别</span>
+                    </div>
+                    <div class="confidence" id="faceConfidence">置信度 --%</div>
+                </div>
+                <div class="visual-placeholder">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>像素</span> <i class="fas fa-arrow-right"></i>
+                    <span>线条</span> <i class="fas fa-arrow-right"></i>
+                    <span>五官</span> <i class="fas fa-arrow-right"></i>
+                    <span>人脸指纹</span> <i class="fas fa-arrow-right"></i>
+                    <span id="resultBadge" style="background: #c5dbf5; padding:2px 14px; border-radius:30px;">⏳ 比对中</span>
+                    <span class="pulse-dot"></span>
+                </div>
+            </div>
+
+            <div class="param-control">
+                <div class="ctrl-group">
+                    <span style="font-size:13px; color:#1f4970;"><i class="fas fa-layer-group"></i> 层数</span>
+                    <input type="range" min="1" max="3" value="2" id="layerSlider" style="max-width:100px;">
+                    <span class="value-badge" id="layerVal">2</span>
+                    <span style="font-size:13px; color:#1f4970; margin-left:8px;"><i class="fas fa-graduation-cap"></i> 学习率</span>
+                    <input type="range" min="1" max="10" value="5" id="lrSlider" style="max-width:100px;">
+                    <span class="value-badge" id="lrVal">0.5</span>
+                </div>
+                <div class="demo-hint"><i class="fas fa-mouse-pointer"></i> 层数越高 → 识别越准</div>
+            </div>
+        </div>
+
+        <!-- ========= 案例2：短视频推荐（保持不变） ========= -->
+        <div class="case-panel">
+            <div class="panel-title">
+                <i class="fas fa-thumbs-up"></i> 短视频个性化推荐
+                <small>内容推荐</small>
+            </div>
+
+            <div class="input-area">
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+                    <i class="fas fa-sliders-h" style="color:#1f6ed4;"></i>
+                    <span style="font-weight:500; font-size:15px;">兴趣输入</span>
+                    <span class="demo-tip"><i class="fas fa-play"></i> 微课演示 10s</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="slider-item" style="flex:1;">
+                        <span style="min-width:70px;"><i class="fas fa-utensils"></i> 美食</span>
+                        <input type="range" min="0" max="10" value="6" class="interestSlider" data-interest="food">
+                        <span class="value-badge interestVal" id="foodVal">0.6</span>
+                    </div>
+                    <div class="slider-item" style="flex:1;">
+                        <span style="min-width:70px;"><i class="fas fa-laugh"></i> 搞笑</span>
+                        <input type="range" min="0" max="10" value="8" class="interestSlider" data-interest="funny">
+                        <span class="value-badge interestVal" id="funnyVal">0.8</span>
+                    </div>
+                    <div class="slider-item" style="flex:1;">
+                        <span style="min-width:70px;"><i class="fas fa-basketball-ball"></i> 体育</span>
+                        <input type="range" min="0" max="10" value="3" class="interestSlider" data-interest="sports">
+                        <span class="value-badge interestVal" id="sportsVal">0.3</span>
+                    </div>
+                    <div class="slider-item" style="flex:1;">
+                        <span style="min-width:70px;"><i class="fas fa-paint-brush"></i> 美妆</span>
+                        <input type="range" min="0" max="10" value="2" class="interestSlider" data-interest="beauty">
+                        <span class="value-badge interestVal" id="beautyVal">0.2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-area">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
+                    <span style="font-weight:500; color:#0a2647;"><i class="fas fa-list-ul"></i> 推荐排序</span>
+                    <span class="demo-tip"><i class="fas fa-sync-alt fa-fw"></i> 兴趣驱动</span>
+                </div>
+                <div class="rec-list" id="recList">
+                    <div class="rec-item"><span class="label">🍜 深夜食堂 · 红烧肉</span><span class="score">92%</span></div>
+                    <div class="rec-item"><span class="label">😂 搞笑喵星人合集</span><span class="score">88%</span></div>
+                    <div class="rec-item"><span class="label">🏀 NBA 每日集锦</span><span class="score">61%</span></div>
+                    <div class="rec-item"><span class="label">💄 新手化妆教程</span><span class="score">43%</span></div>
+                </div>
+                <div class="visual-placeholder" style="margin-top: 12px;">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>行为流水</span> <i class="fas fa-arrow-right"></i>
+                    <span>统计</span> <i class="fas fa-arrow-right"></i>
+                    <span>兴趣画像</span> <i class="fas fa-arrow-right"></i>
+                    <span style="background: #c5dbf5; padding:2px 14px; border-radius:30px;">📱 推送管家</span>
+                </div>
+            </div>
+
+            <div class="param-control">
+                <div class="ctrl-group">
+                    <button class="btn btn-primary" id="recDemoBtn"><i class="fas fa-play"></i> 一键演示 (调兴趣)</button>
+                    <button class="btn btn-outline" id="recResetBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+                </div>
+                <div class="demo-hint"><i class="fas fa-mouse-pointer"></i> 拖动美食 0→1 推荐变化</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footnote">
+        <span><i class="fas fa-cube"></i> 流水线职员 · 逐层加工</span>
+        <span><i class="fas fa-weight-hanging"></i> 权重 · 学习率可调</span>
+        <span><i class="fas fa-mobile-alt"></i> 零门槛 · 即拖即看</span>
+        <span><i class="fas fa-code"></i> 演示系统 · 微课加分项</span>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ======== 人脸识别（新流程） ========
+        const faceUpload = document.getElementById('faceUpload');
+        const faceFileName = document.getElementById('faceFileName');
+        const originalPreview = document.getElementById('originalPreview');
+        const capturedPreview = document.getElementById('capturedPreview');
+        const faceLabel = document.getElementById('faceLabel');
+        const faceConfidence = document.getElementById('faceConfidence');
+        const resultBadge = document.getElementById('resultBadge');
+        const layerSlider = document.getElementById('layerSlider');
+        const layerVal = document.getElementById('layerVal');
+        const lrSlider = document.getElementById('lrSlider');
+        const lrVal = document.getElementById('lrVal');
+        const captureBtn = document.getElementById('captureBtn');
+        const resetFaceBtn = document.getElementById('resetFaceBtn');
+
+        let originalImageData = null;  // 存储原始照片
+        let capturedImageData = null;  // 存储拍照照片
+
+        // 上传原始照片
+        faceUpload.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+            faceFileName.textContent = file.name.slice(0, 12) + (file.name.length > 12 ? '…' : '');
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = document.createElement('img');
+                img.src = ev.target.result;
+                img.alt = '原始照片';
+                originalPreview.innerHTML = '';
+                originalPreview.appendChild(img);
+                originalImageData = ev.target.result;
+                // 重置识别结果
+                faceLabel.textContent = '等待拍照';
+                faceConfidence.textContent = '置信度 --%';
+                resultBadge.textContent = '⏳ 等待拍照';
+                resultBadge.style.background = '#c5dbf5';
+                capturedPreview.innerHTML = '<div class="placeholder-text">等待拍照</div>';
+                capturedImageData = null;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 拍照比对
+        captureBtn.addEventListener('click', function() {
+            if (!originalImageData) {
+                alert('请先上传原始照片！');
+                return;
+            }
+
+            // 模拟拍照：用原始照片加一些"变化"模拟实时拍照
+            // 实际上，我们用原始照片生成一个"变体"来模拟不同的拍摄角度/光线
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                // 稍微随机缩放/偏移模拟拍照差异
+                const w = img.width;
+                const h = img.height;
+                canvas.width = w;
+                canvas.height = h;
+                // 随机微小偏移（模拟拍摄角度不同）
+                const offsetX = (Math.random() - 0.5) * 20;
+                const offsetY = (Math.random() - 0.5) * 20;
+                const scale = 0.92 + Math.random() * 0.16;
+                const sw = w * scale;
+                const sh = h * scale;
+                const sx = (w - sw) / 2 + offsetX;
+                const sy = (h - sh) / 2 + offsetY;
+                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+                // 加一点随机亮度变化
+                const imageData = ctx.getImageData(0, 0, w, h);
+                const data = imageData.data;
+                const brightness = 0.85 + Math.random() * 0.3;
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = Math.min(255, data[i] * brightness);
+                    data[i+1] = Math.min(255, data[i+1] * brightness);
+                    data[i+2] = Math.min(255, data[i+2] * brightness);
+                }
+                ctx.putImageData(imageData, 0, 0);
+
+                const resultData = canvas.toDataURL('image/png');
+                capturedImageData = resultData;
+                const img2 = document.createElement('img');
+                img2.src = resultData;
+                img2.alt = '拍照照片';
+                capturedPreview.innerHTML = '';
+                capturedPreview.appendChild(img2);
+
+                // 执行比对
+                performMatch();
+            };
+            img.src = originalImageData;
+        });
+
+        function performMatch() {
+            const layer = parseInt(layerSlider.value, 10);
+            const lr = parseInt(lrSlider.value, 10) / 10;
+
+            // 计算匹配度：基础值 + 层数影响 + 学习率影响 + 随机因素
+            let base = 0.55 + (layer - 1) * 0.15;
+            let lrFactor = 0.85 + lr * 0.15;
+            // 引入随机差异模拟拍照质量影响（但控制在合理范围内）
+            let qualityFactor = 0.85 + Math.random() * 0.3;
+            let conf = Math.min(0.98, base * lrFactor * qualityFactor + 0.05);
+            conf = Math.max(0.25, conf);
+
+            const confPercent = Math.round(conf * 100);
+            const isMatch = conf > 0.65;
+
+            if (isMatch) {
+                faceLabel.textContent = '✅ 是 (匹配)';
+                faceLabel.style.color = '#1a8b4c';
+                faceConfidence.textContent = `置信度 ${confPercent}%`;
+                resultBadge.textContent = '✅ 匹配成功';
+                resultBadge.style.background = '#a8e6b0';
+            } else {
+                faceLabel.textContent = '❌ 不是 (不匹配)';
+                faceLabel.style.color = '#b02a1a';
+                faceConfidence.textContent = `置信度 ${confPercent}%`;
+                resultBadge.textContent = '❌ 不匹配';
+                resultBadge.style.background = '#f5c6c6';
+            }
+            layerVal.textContent = layer;
+            lrVal.textContent = lr.toFixed(1);
+        }
+
+        // 滑块触发重新比对
+        layerSlider.addEventListener('input', function() {
+            layerVal.textContent = this.value;
+            if (originalImageData && capturedImageData) {
+                performMatch();
+            }
+        });
+        lrSlider.addEventListener('input', function() {
+            lrVal.textContent = (parseInt(this.value) / 10).toFixed(1);
+            if (originalImageData && capturedImageData) {
+                performMatch();
+            }
+        });
+
+        // 重置
+        resetFaceBtn.addEventListener('click', function() {
+            faceUpload.value = '';
+            faceFileName.textContent = '未选择';
+            originalPreview.innerHTML = '<div class="placeholder-text">尚未上传</div>';
+            capturedPreview.innerHTML = '<div class="placeholder-text">等待拍照</div>';
+            faceLabel.textContent = '等待识别';
+            faceLabel.style.color = '#0a2647';
+            faceConfidence.textContent = '置信度 --%';
+            resultBadge.textContent = '⏳ 比对中';
+            resultBadge.style.background = '#c5dbf5';
+            originalImageData = null;
+            capturedImageData = null;
+            layerSlider.value = 2;
+            lrSlider.value = 5;
+            layerVal.textContent = '2';
+            lrVal.textContent = '0.5';
+        });
+
+        // ======== 推荐系统（保持不变） ========
+        const interestSliders = document.querySelectorAll('.interestSlider');
+        const interestValSpans = document.querySelectorAll('.interestVal');
+        const recList = document.getElementById('recList');
+        const videoDB = [
+            { name: '🍜 深夜食堂 · 红烧肉', tag: 'food' },
+            { name: '😂 搞笑喵星人合集', tag: 'funny' },
+            { name: '🏀 NBA 每日集锦', tag: 'sports' },
+            { name: '💄 新手化妆教程', tag: 'beauty' },
+            { name: '🍣 日料大师·刺身', tag: 'food' },
+            { name: '🤣 爆笑动物配音', tag: 'funny' },
+        ];
+
+        function updateRecommendation() {
+            const interests = {
+                food: parseFloat(document.getElementById('foodVal').textContent),
+                funny: parseFloat(document.getElementById('funnyVal').textContent),
+                sports: parseFloat(document.getElementById('sportsVal').textContent),
+                beauty: parseFloat(document.getElementById('beautyVal').textContent)
+            };
+            const scored = videoDB.map(v => {
+                let score = interests[v.tag] || 0;
+                score = Math.min(1, score * 0.9 + 0.05 * (Math.random() * 0.3 + 0.85));
+                return { ...v, score: score };
+            });
+            scored.sort((a,b) => b.score - a.score);
+            const top4 = scored.slice(0, 4);
+            recList.innerHTML = '';
+            top4.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'rec-item';
+                const percent = Math.round(item.score * 100);
+                div.innerHTML = `<span class="label">${item.name}</span><span class="score">${percent}%</span>`;
+                recList.appendChild(div);
+            });
+        }
+
+        interestSliders.forEach((slider, idx) => {
+            slider.addEventListener('input', function() {
+                const val = parseFloat(this.value) / 10;
+                const targetSpan = interestValSpans[idx];
+                if (targetSpan) targetSpan.textContent = val.toFixed(1);
+                updateRecommendation();
+            });
+        });
+
+        document.getElementById('recDemoBtn').addEventListener('click', function() {
+            const foodSlider = document.querySelector('.interestSlider[data-interest="food"]');
+            const foodSpan = document.getElementById('foodVal');
+            let step = 0;
+            const interval = setInterval(() => {
+                if (step > 10) { clearInterval(interval); return; }
+                const val = step / 10;
+                foodSlider.value = step;
+                foodSpan.textContent = val.toFixed(1);
+                updateRecommendation();
+                step++;
+            }, 280);
+        });
+
+        document.getElementById('recResetBtn').addEventListener('click', function() {
+            const defaults = [6, 8, 3, 2];
+            interestSliders.forEach((slider, i) => {
+                slider.value = defaults[i];
+                const span = interestValSpans[i];
+                if (span) span.textContent = (defaults[i]/10).toFixed(1);
+            });
+            updateRecommendation();
+        });
+
+        // 初始化
+        updateRecommendation();
+    })();
+</script>
+</body>
+</html>
