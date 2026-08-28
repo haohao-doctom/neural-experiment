@@ -80,10 +80,11 @@
 
         .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
         .footnote i { color: #2b7be4; margin-right: 4px; }
-        .step-badge { display: inline-block; background: #1a5fb0; color: white; border-radius: 30px; padding: 0 14px; font-size: 12px; font-weight: 600; margin-right: 6px; }
         .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; }
-        .status-tag.train { background: #f5e6b0; color: #8a6a1a; }
         .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
+        .training-badge { display: inline-block; background: #d48c1a; color: white; border-radius: 30px; padding: 0 14px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+        .label-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .label-tag { background: #d4e2fc; color: #1a4c8a; padding: 2px 12px; border-radius: 30px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -99,7 +100,7 @@
         <!-- ===== 人脸识别（训练+推理） ===== -->
         <div class="case-panel">
             <div class="panel-title">
-                <i class="fas fa-user-check"></i> 人脸识别签到
+                <i class="fas fa-user-check"></i> 校园人脸识别签到
                 <small>训练 + 推理</small>
                 <span class="status-tag" id="faceStatusTag">⏳ 未训练</span>
             </div>
@@ -108,19 +109,16 @@
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-database" style="color:#1f6ed4;"></i>
-                    <span style="font-weight:500; font-size:15px;">步骤0：训练数据集（含标签）</span>
+                    <span style="font-weight:500; font-size:15px;">步骤0：准备训练数据集</span>
                     <span class="demo-tip">每人2-3张</span>
                 </div>
-                <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                    <div class="file-upload" onclick="document.getElementById('trainUpload').click();" style="flex:1;">
-                        <i class="fas fa-upload"></i> 导入训练照片
-                        <input type="file" accept="image/*" id="trainUpload" multiple style="display:none;">
-                        <span style="margin-left:auto; font-size:12px; color:#4b6f92;" id="trainFileCount">0 张</span>
-                    </div>
-                    <input type="text" id="trainLabel" placeholder="输入标签(如:张三)" style="border:1px solid #ccdcee; border-radius:60px; padding:6px 16px; font-size:14px; flex:0 1 120px;">
-                    <button class="btn btn-outline" id="addLabelBtn" style="font-size:12px;"><i class="fas fa-tag"></i> 添加标签</button>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                    <button class="btn btn-primary" id="addTrainBtn"><i class="fas fa-plus"></i> 📤 添加训练照片</button>
+                    <button class="btn btn-outline" id="clearTrainBtn" style="font-size:12px;"><i class="fas fa-trash"></i> 清空</button>
+                    <span style="font-size:13px; color:#4d6f91; margin-left:4px;" id="trainCountDisplay">已添加 0 张</span>
                 </div>
-                <div style="margin-top:6px; font-size:13px; color:#3a6a8a;" id="trainSetInfo">📋 训练集：暂无照片，请上传并添加标签</div>
+                <div style="margin-top:6px; font-size:13px; color:#3a6a8a;" id="trainSetInfo">💡 点击「添加训练照片」→ 多选照片 → 输入标签（如：张三）</div>
+                <div class="label-group" id="labelGroup"></div>
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;" id="trainPreviewThumbs"></div>
             </div>
 
@@ -141,11 +139,9 @@
                         <span style="font-size:12px; color:#8a6a1a; margin-left:4px;">⚠️ 0.6以上易震荡</span>
                     </div>
                 </div>
-                <!-- 训练日志 -->
                 <div class="training-log" id="faceTrainLog">
                     <div class="log-info">⏳ 等待训练...</div>
                 </div>
-                <!-- 权重可视化 -->
                 <div class="weight-bar">
                     <span class="bar-label">权重收敛</span>
                     <div class="bar-track"><div class="bar-fill" id="weightBarFace" style="width:5%;"></div></div>
@@ -186,12 +182,11 @@
         <!-- ===== 短视频推荐（训练+推理） ===== -->
         <div class="case-panel">
             <div class="panel-title">
-                <i class="fas fa-thumbs-up"></i> 短视频推荐
+                <i class="fas fa-thumbs-up"></i> 短视频个性化推荐
                 <small>训练 + 推理</small>
                 <span class="status-tag" id="recStatusTag">⏳ 未训练</span>
             </div>
 
-            <!-- 训练数据 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-database" style="color:#1f6ed4;"></i>
@@ -212,7 +207,6 @@
                 <div style="margin-top:6px; font-size:12px; color:#6a8aaa;">👆 这是AI的“练习题+标准答案”，训练时用来计算误差</div>
             </div>
 
-            <!-- 训练控制 -->
             <div class="input-area" style="background:#eaf3fe;">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-cogs" style="color:#d48c1a;"></i>
@@ -237,7 +231,6 @@
                 </div>
             </div>
 
-            <!-- 推理 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-sliders-h" style="color:#1a8b4c;"></i>
@@ -277,14 +270,14 @@
 <script>
 (function() {
     // ============================================================
-    // 1. 人脸识别模块：训练 + 推理
+    // 人脸识别模块
     // ============================================================
-    const trainUpload = document.getElementById('trainUpload');
-    const trainFileCount = document.getElementById('trainFileCount');
-    const trainLabel = document.getElementById('trainLabel');
-    const addLabelBtn = document.getElementById('addLabelBtn');
+    const addTrainBtn = document.getElementById('addTrainBtn');
+    const clearTrainBtn = document.getElementById('clearTrainBtn');
+    const trainCountDisplay = document.getElementById('trainCountDisplay');
     const trainSetInfo = document.getElementById('trainSetInfo');
     const trainPreviewThumbs = document.getElementById('trainPreviewThumbs');
+    const labelGroup = document.getElementById('labelGroup');
     const trainPreviewSample = document.getElementById('trainPreviewSample');
     const faceTrainBtn = document.getElementById('faceTrainBtn');
     const faceResetTrainBtn = document.getElementById('faceResetTrainBtn');
@@ -303,7 +296,7 @@
     const trainLrSlider = document.getElementById('trainLrSlider');
     const trainLrVal = document.getElementById('trainLrVal');
 
-    let trainData = []; // [{name, label, dataURL}]
+    let trainData = [];
     let trainedWeights = null;
     let isFaceTrained = false;
 
@@ -311,84 +304,107 @@
         trainLrVal.textContent = (parseInt(this.value)/10).toFixed(1);
     });
 
-    // 添加训练照片
-    trainUpload.addEventListener('change', function(e) {
-        const files = this.files;
-        if (!files.length) return;
-        const label = trainLabel.value.trim() || '未命名';
-        for (let f of files) {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                trainData.push({ name: f.name, label: label, dataURL: ev.target.result });
-                updateTrainUI();
-            };
-            reader.readAsDataURL(f);
-        }
-        this.value = '';
+    // 核心：添加训练照片（批量上传 + 弹窗输入标签）
+    addTrainBtn.addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = true;
+        input.onchange = function(e) {
+            const files = this.files;
+            if (!files || files.length === 0) return;
+            // 弹窗输入标签
+            const label = prompt('请输入这 ' + files.length + ' 张照片的标签（如：张三、李四）：', '张三');
+            if (label === null || label.trim() === '') {
+                alert('标签不能为空！');
+                return;
+            }
+            const trimmedLabel = label.trim();
+            let loaded = 0;
+            for (let f of files) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    trainData.push({ name: f.name, label: trimmedLabel, dataURL: ev.target.result });
+                    loaded++;
+                    if (loaded === files.length) {
+                        updateTrainUI();
+                    }
+                };
+                reader.readAsDataURL(f);
+            }
+            // 如果文件数量为0，不触发
+            if (files.length === 0) return;
+            // 但上面的循环会处理，这里用loaded计数
+        };
+        input.click();
     });
 
-    addLabelBtn.addEventListener('click', function() {
-        const label = trainLabel.value.trim();
-        if (!label) { alert('请先输入标签'); return; }
-        // 触发上传
-        trainUpload.click();
+    clearTrainBtn.addEventListener('click', function() {
+        if (trainData.length === 0) return;
+        if (confirm('确定要清空所有训练照片吗？')) {
+            trainData = [];
+            updateTrainUI();
+        }
     });
 
     function updateTrainUI() {
-        trainFileCount.textContent = trainData.length + ' 张';
-        trainSetInfo.textContent = `📋 训练集：共 ${trainData.length} 张照片，包含标签：${[...new Set(trainData.map(d=>d.label))].join(', ')}`;
+        trainCountDisplay.textContent = '已添加 ' + trainData.length + ' 张';
+        const labels = [...new Set(trainData.map(d => d.label))];
+        if (trainData.length === 0) {
+            trainSetInfo.textContent = '💡 点击「添加训练照片」→ 多选照片 → 输入标签（如：张三）';
+            labelGroup.innerHTML = '';
+            trainPreviewThumbs.innerHTML = '';
+            trainPreviewSample.innerHTML = '<div class="placeholder-text">训练后显示</div>';
+            return;
+        }
+        trainSetInfo.textContent = '📋 训练集：共 ' + trainData.length + ' 张照片，标签：' + labels.join('、');
+        // 标签显示
+        labelGroup.innerHTML = labels.map(l => `<span class="label-tag"><i class="fas fa-tag"></i> ${l}</span>`).join('');
         // 缩略图
         trainPreviewThumbs.innerHTML = '';
-        const maxShow = 9;
+        const maxShow = 12;
         for (let i=0; i<Math.min(trainData.length, maxShow); i++) {
             const img = document.createElement('img');
             img.src = trainData[i].dataURL;
-            img.style.width = '50px'; img.style.height = '50px'; img.style.objectFit = 'cover';
+            img.style.width = '48px'; img.style.height = '48px'; img.style.objectFit = 'cover';
             img.style.borderRadius = '8px'; img.style.border = '1px solid #ccdcee';
             img.title = trainData[i].label;
             trainPreviewThumbs.appendChild(img);
         }
         if (trainData.length > maxShow) {
             const span = document.createElement('span');
-            span.textContent = `+${trainData.length - maxShow}`;
+            span.textContent = '+' + (trainData.length - maxShow);
             span.style.fontSize = '12px'; span.style.color = '#6a8aaa';
             trainPreviewThumbs.appendChild(span);
         }
         // 示例
-        if (trainData.length > 0) {
-            const img = document.createElement('img');
-            img.src = trainData[0].dataURL;
-            img.style.maxHeight = '100px';
-            trainPreviewSample.innerHTML = '';
-            trainPreviewSample.appendChild(img);
-            trainPreviewSample.innerHTML += `<div style="font-size:11px; color:#4d6f91;">${trainData[0].label}</div>`;
-        }
+        const sample = trainData[0];
+        const img = document.createElement('img');
+        img.src = sample.dataURL;
+        img.style.maxHeight = '80px';
+        trainPreviewSample.innerHTML = '';
+        trainPreviewSample.appendChild(img);
+        trainPreviewSample.innerHTML += `<div style="font-size:11px; color:#4d6f91;">${sample.label}</div>`;
     }
 
-    // 训练人脸识别
+    // 训练
     faceTrainBtn.addEventListener('click', function() {
         if (trainData.length < 2) {
             alert('至少需要2张训练照片！');
             return;
         }
-        // 检查标签
-        const labels = trainData.map(d=>d.label);
-        const uniqueLabels = [...new Set(labels)];
-        if (uniqueLabels.length < 2) {
+        const labels = [...new Set(trainData.map(d=>d.label))];
+        if (labels.length < 2) {
             alert('至少需要2个不同的标签（如：张三、李四）！');
             return;
         }
-
         faceTrainBtn.disabled = true;
         faceTrainBtn.textContent = '⏳ 训练中...';
         faceTrainLog.innerHTML = '<div class="log-info">🧠 开始训练...</div>';
-
         const lr = parseInt(trainLrSlider.value) / 10;
         const epochs = 5;
         let logLines = [];
         let weights = Array.from({length: trainData.length}, () => Math.random() * 0.5 + 0.25);
-
-        // 模拟训练
         let step = 0;
         const interval = setInterval(() => {
             if (step >= epochs) {
@@ -399,22 +415,19 @@
                 faceStatusTag.className = 'status-tag done';
                 faceTrainBtn.disabled = false;
                 faceTrainBtn.textContent = '🚀 开始训练';
-                faceTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会识别 ${uniqueLabels.join('、')}</div>`;
+                faceTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
                 faceTrainLog.innerHTML += `<div class="log-info">💡 权重已固定，后续推理不会修改权重</div>`;
                 weightBarFace.style.width = '100%';
                 weightLabelFace.textContent = '100%';
                 inferNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
                 return;
             }
-
-            // 模拟正向+反向传播
             let totalLoss = 0;
             for (let i = 0; i < trainData.length; i++) {
                 const pred = Math.min(1, weights[i] * (0.8 + Math.random() * 0.4));
-                const target = 1; // 假设全部为正样本
+                const target = 1;
                 const loss = Math.pow(pred - target, 2);
                 totalLoss += loss;
-                // 反向传播：更新权重
                 const grad = 2 * (pred - target);
                 weights[i] = Math.max(0.1, Math.min(1.5, weights[i] - lr * grad * 0.5));
             }
@@ -422,18 +435,15 @@
             const progress = Math.min(100, ((step+1) / epochs) * 100);
             weightBarFace.style.width = progress + '%';
             weightLabelFace.textContent = Math.round(progress) + '%';
-
             const status = avgLoss < 0.3 ? '✅ 收敛中' : '🔄 调整中';
             logLines.push(`轮次 ${step+1}: 正向传播 → 误差=${avgLoss.toFixed(3)} → 反向传播 → 更新权重 ${status}`);
             if (logLines.length > 4) logLines.shift();
             faceTrainLog.innerHTML = logLines.map(l => `<div class="${avgLoss<0.3?'log-ok':'log-info'}">${l}</div>`).join('');
             faceTrainLog.scrollTop = faceTrainLog.scrollHeight;
-
             step++;
         }, 600);
     });
 
-    // 重置训练
     faceResetTrainBtn.addEventListener('click', function() {
         trainData = [];
         trainedWeights = null;
@@ -452,9 +462,10 @@
         inferPreview.innerHTML = '<div class="placeholder-text">等待上传</div>';
         inferFileName.textContent = '未选择';
         trainPreviewSample.innerHTML = '<div class="placeholder-text">训练后显示</div>';
+        labelGroup.innerHTML = '';
+        trainPreviewThumbs.innerHTML = '';
     });
 
-    // 推理
     let inferImageData = null;
     inferUpload.addEventListener('change', function(e) {
         const file = this.files[0];
@@ -480,7 +491,6 @@
             alert('请先上传测试照片！');
             return;
         }
-        // 模拟推理
         const base = 0.5 + Math.random() * 0.3;
         const weightFactor = trainedWeights.reduce((a,b) => a+b, 0) / trainedWeights.length;
         let conf = Math.min(0.98, base + weightFactor * 0.3 + Math.random() * 0.1);
@@ -503,7 +513,7 @@
     });
 
     // ============================================================
-    // 2. 短视频推荐模块：训练 + 推理
+    // 短视频推荐模块
     // ============================================================
     const recTrainBtn = document.getElementById('recTrainBtn');
     const recResetTrainBtn = document.getElementById('recResetTrainBtn');
@@ -519,7 +529,6 @@
     const recTrainLrSlider = document.getElementById('recTrainLrSlider');
     const recTrainLrVal = document.getElementById('recTrainLrVal');
 
-    // 测试输入滑块
     const testSliders = {
         food: document.getElementById('testFood'),
         funny: document.getElementById('testFunny'),
@@ -541,7 +550,6 @@
         recTrainLrVal.textContent = (parseInt(this.value)/10).toFixed(1);
     });
 
-    // 训练数据（固定）
     const recTrainData = [
         { name: '用户A', behavior: { food: 20, funny: 2, sports: 3, beauty: 0 }, label: { food: 0.8, funny: 0.1, sports: 0.1, beauty: 0 } },
         { name: '用户B', behavior: { food: 1, funny: 25, sports: 2, beauty: 1 }, label: { food: 0.1, funny: 0.7, sports: 0.1, beauty: 0.1 } }
@@ -557,8 +565,7 @@
         const lr = parseInt(recTrainLrSlider.value) / 10;
         const epochs = 5;
         let logLines = [];
-        let weights = [0.3, 0.3, 0.2, 0.2]; // 初始权重
-
+        let weights = [0.3, 0.3, 0.2, 0.2];
         let step = 0;
         const interval = setInterval(() => {
             if (step >= epochs) {
@@ -576,8 +583,6 @@
                 recInferNote.textContent = '✅ 训练完成！可使用训练好的权重进行推荐推理';
                 return;
             }
-
-            // 模拟训练
             let totalLoss = 0;
             for (let user of recTrainData) {
                 const pred = [
@@ -601,13 +606,11 @@
             const progress = Math.min(100, ((step+1) / epochs) * 100);
             weightBarRec.style.width = progress + '%';
             weightLabelRec.textContent = Math.round(progress) + '%';
-
             const status = avgLoss < 0.1 ? '✅ 收敛' : '🔄 调整中';
             logLines.push(`轮次 ${step+1}: 预测兴趣 [${weights.map(w=>w.toFixed(2)).join(', ')}] 误差=${avgLoss.toFixed(3)} ${status}`);
             if (logLines.length > 4) logLines.shift();
             recTrainLog.innerHTML = logLines.map(l => `<div class="${avgLoss<0.1?'log-ok':'log-info'}">${l}</div>`).join('');
             recTrainLog.scrollTop = recTrainLog.scrollHeight;
-
             step++;
         }, 600);
     });
@@ -643,7 +646,6 @@
             sports: parseInt(testSliders.sports.value) / 10,
             beauty: parseInt(testSliders.beauty.value) / 10
         };
-        // 用训练好的权重计算兴趣
         const pred = [
             recWeights[0] * (input.food + 0.2),
             recWeights[1] * (input.funny + 0.2),
@@ -693,7 +695,6 @@
         recInferResult.textContent = '💡 点击「推理推荐」查看结果';
     });
 
-    // 初始化
     updateTrainUI();
 })();
 </script>
