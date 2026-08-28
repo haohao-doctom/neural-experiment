@@ -43,6 +43,7 @@
         .training-log { background: #0a1a2f; color: #b0d4f0; border-radius: 16px; padding: 14px 18px; font-family: 'Courier New', monospace; font-size: 13px; max-height: 160px; overflow-y: auto; margin-top: 10px; line-height: 1.7; }
         .training-log .log-ok { color: #7ddf9a; }
         .training-log .log-info { color: #8ab8e6; }
+        .training-log .weight-value { color: #f7d44a; font-weight: bold; font-size: 15px; }
         .weight-bar { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
         .weight-bar .bar-label { font-size: 12px; color: #4d6f91; min-width: 40px; }
         .weight-bar .bar-track { flex: 1; min-width: 60px; height: 8px; background: #e2eaf3; border-radius: 10px; overflow: hidden; }
@@ -65,6 +66,8 @@
         .demo-tip { font-size: 13px; background: #d9e7fc; border-radius: 50px; padding: 4px 14px; color: #00337a; display: inline-block; }
         .label-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
         .label-tag { background: #d4e2fc; color: #1a4c8a; padding: 2px 12px; border-radius: 30px; font-size: 12px; }
+        .weight-display { background: #1a2a3f; border-radius: 12px; padding: 10px 16px; margin-top: 8px; font-family: 'Courier New', monospace; font-size: 14px; color: #f7d44a; border-left: 3px solid #f7d44a; }
+        .weight-display .label { color: #8ab8e6; font-size: 12px; }
         .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
         .footnote i { color: #2b7be4; margin-right: 4px; }
     </style>
@@ -124,6 +127,11 @@
                     <span class="bar-label">权重收敛</span>
                     <div class="bar-track"><div class="bar-fill" id="weightBarFace" style="width:5%;"></div></div>
                     <span style="font-size:12px; color:#4d6f91;" id="weightLabelFace">5%</span>
+                </div>
+                <!-- 权重数值显示区域 -->
+                <div id="weightDisplayArea" style="display:none;" class="weight-display">
+                    <span class="label">📊 训练完成！最终权重值：</span>
+                    <span id="weightValuesFace">[0.92, 0.78, 1.13, 0.45]</span>
                 </div>
             </div>
 
@@ -204,6 +212,11 @@
                     <div class="bar-track"><div class="bar-fill" id="weightBarRec" style="width:5%;"></div></div>
                     <span style="font-size:12px; color:#4d6f91;" id="weightLabelRec">5%</span>
                 </div>
+                <div id="recWeightDisplayArea" style="display:none;" class="weight-display">
+                    <span class="label">📊 训练完成！最终权重值：</span>
+                    <span id="weightValuesRec">[0.72, 0.55, 0.08, 0.05]</span>
+                    <div style="font-size:11px; color:#8ab8e6; margin-top:4px;">美食 · 搞笑 · 体育 · 美妆</div>
+                </div>
             </div>
 
             <div class="input-area">
@@ -238,6 +251,7 @@
         <span><i class="fas fa-cube"></i> 训练 → 推理 → 可视化</span>
         <span><i class="fas fa-arrow-right"></i> 正向传播 · 误差计算 · 反向传播</span>
         <span><i class="fas fa-weight-hanging"></i> 权重随训练更新，推理不修改</span>
+        <span><i class="fas fa-code"></i> 权重数值直接显示在界面上</span>
     </div>
 </div>
 
@@ -258,6 +272,8 @@
     const faceTrainLog = document.getElementById('faceTrainLog');
     const weightBarFace = document.getElementById('weightBarFace');
     const weightLabelFace = document.getElementById('weightLabelFace');
+    const weightDisplayArea = document.getElementById('weightDisplayArea');
+    const weightValuesFace = document.getElementById('weightValuesFace');
     const faceStatusTag = document.getElementById('faceStatusTag');
     const inferUpload = document.getElementById('inferUpload');
     const inferFileName = document.getElementById('inferFileName');
@@ -278,7 +294,6 @@
         trainLrVal.textContent = (parseInt(this.value)/10).toFixed(1);
     });
 
-    // 核心：添加训练照片（批量上传 + 弹窗输入标签）
     addTrainBtn.addEventListener('click', function() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -368,6 +383,7 @@
         faceTrainBtn.disabled = true;
         faceTrainBtn.textContent = '⏳ 训练中...';
         faceTrainLog.innerHTML = '<div class="log-info">🧠 开始训练...</div>';
+        weightDisplayArea.style.display = 'none';
         const lr = parseInt(trainLrSlider.value) / 10;
         const epochs = 5;
         let logLines = [];
@@ -382,8 +398,13 @@
                 faceStatusTag.className = 'status-tag done';
                 faceTrainBtn.disabled = false;
                 faceTrainBtn.textContent = '🚀 开始训练';
+                // 显示权重数值
+                const weightStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
+                weightValuesFace.textContent = '[' + weightStr + ']';
+                weightDisplayArea.style.display = 'block';
                 faceTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
                 faceTrainLog.innerHTML += `<div class="log-info">💡 权重已固定，后续推理不会修改权重</div>`;
+                faceTrainLog.innerHTML += `<div class="weight-value">📊 最终权重值： [${weightStr}]</div>`;
                 weightBarFace.style.width = '100%';
                 weightLabelFace.textContent = '100%';
                 inferNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
@@ -421,6 +442,7 @@
         faceTrainLog.innerHTML = '<div class="log-info">⏳ 等待训练...</div>';
         weightBarFace.style.width = '5%';
         weightLabelFace.textContent = '5%';
+        weightDisplayArea.style.display = 'none';
         faceTrainBtn.disabled = false;
         faceTrainBtn.textContent = '🚀 开始训练';
         inferNote.textContent = '💡 请先完成训练，再进行推理';
@@ -487,6 +509,8 @@
     const recTrainLog = document.getElementById('recTrainLog');
     const weightBarRec = document.getElementById('weightBarRec');
     const weightLabelRec = document.getElementById('weightLabelRec');
+    const recWeightDisplayArea = document.getElementById('recWeightDisplayArea');
+    const weightValuesRec = document.getElementById('weightValuesRec');
     const recStatusTag = document.getElementById('recStatusTag');
     const recInferBtn = document.getElementById('recInferBtn');
     const recInferResetBtn = document.getElementById('recInferResetBtn');
@@ -529,6 +553,7 @@
         recTrainBtn.disabled = true;
         recTrainBtn.textContent = '⏳ 训练中...';
         recTrainLog.innerHTML = '<div class="log-info">🧠 开始训练推荐网络...</div>';
+        recWeightDisplayArea.style.display = 'none';
         const lr = parseInt(recTrainLrSlider.value) / 10;
         const epochs = 5;
         let logLines = [];
@@ -543,8 +568,12 @@
                 recStatusTag.className = 'status-tag done';
                 recTrainBtn.disabled = false;
                 recTrainBtn.textContent = '🚀 开始训练';
+                const wStr = recWeights.map(w => w.toFixed(2)).join(', ');
+                weightValuesRec.textContent = '[' + wStr + ']';
+                recWeightDisplayArea.style.display = 'block';
                 recTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会预测用户兴趣</div>`;
                 recTrainLog.innerHTML += `<div class="log-info">💡 权重已固定：美食=${weights[0].toFixed(2)}, 搞笑=${weights[1].toFixed(2)}, 体育=${weights[2].toFixed(2)}, 美妆=${weights[3].toFixed(2)}</div>`;
+                recTrainLog.innerHTML += `<div class="weight-value">📊 最终权重值： [${wStr}]</div>`;
                 weightBarRec.style.width = '100%';
                 weightLabelRec.textContent = '100%';
                 recInferNote.textContent = '✅ 训练完成！可使用训练好的权重进行推荐推理';
@@ -590,6 +619,7 @@
         recTrainLog.innerHTML = '<div class="log-info">⏳ 等待训练...</div>';
         weightBarRec.style.width = '5%';
         weightLabelRec.textContent = '5%';
+        recWeightDisplayArea.style.display = 'none';
         recTrainBtn.disabled = false;
         recTrainBtn.textContent = '🚀 开始训练';
         recInferNote.textContent = '💡 请先完成训练，再进行推荐推理';
