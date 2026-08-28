@@ -13,22 +13,14 @@
         .header h1 { font-size: 28px; font-weight: 600; color: #0a2647; display: flex; align-items: center; gap: 10px; }
         .header h1 i { color: #2b7be4; font-size: 28px; }
         .header .badge { background: #d4e2fc; color: #1a4c8a; padding: 8px 18px; border-radius: 60px; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-
         .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 8px; }
         @media (max-width: 980px) { .demo-grid { grid-template-columns: 1fr; gap: 32px; } }
-
         .case-panel { background: #ffffff; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,0.04); border: 1px solid #e9f0f7; padding: 24px 22px 28px; }
         .panel-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; color: #0b2b4a; margin-bottom: 16px; border-bottom: 1px dashed #dce6f0; padding-bottom: 12px; }
         .panel-title i { font-size: 22px; color: #2b7be4; width: 32px; }
         .panel-title small { font-weight: 400; font-size: 14px; color: #5f7d9c; margin-left: 6px; }
-
         .input-area { background: #f9fbfe; border-radius: 20px; padding: 18px 16px 16px; margin-bottom: 16px; }
         .input-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 10px; margin-top: 6px; }
-
-        .file-upload { background: white; border: 1px solid #ccdcee; border-radius: 60px; padding: 6px 18px 6px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.15s; flex: 1 1 160px; }
-        .file-upload:hover { background: #edf4fe; border-color: #8ab3e6; }
-        .file-upload input { display: none; }
-
         .btn { background: white; border: 1px solid #b6cee9; border-radius: 60px; padding: 8px 22px; font-weight: 500; font-size: 14px; color: #1c4b7a; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.15s; }
         .btn-primary { background: #1a5fb0; border-color: #1a5fb0; color: white; box-shadow: 0 4px 10px rgba(26,95,176,0.2); }
         .btn-primary:hover { background: #124a8a; transform: scale(0.97); }
@@ -36,55 +28,45 @@
         .btn-success:hover { background: #0f6d3a; transform: scale(0.97); }
         .btn-warning { background: #d48c1a; border-color: #d48c1a; color: white; }
         .btn-warning:hover { background: #b0700f; transform: scale(0.97); }
-        .btn-danger { background: #b02a1a; border-color: #b02a1a; color: white; }
         .btn-outline { background: transparent; border: 1px solid #b0c8e3; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
         .output-area { background: #f2f6fd; border-radius: 20px; padding: 18px 18px 16px; margin: 6px 0 16px; border-left: 4px solid #2b7be4; }
         .output-row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 20px; }
         .result-tag { background: white; border-radius: 60px; padding: 10px 22px; font-weight: 600; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: inline-flex; align-items: center; gap: 10px; }
         .result-tag i { color: #1f6ed4; }
         .confidence { background: #e3edfa; padding: 6px 18px; border-radius: 60px; font-size: 15px; font-weight: 500; }
-
-        .param-control { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 12px; margin: 14px 0 10px; padding: 10px 0 4px; border-top: 1px solid #e4edf6; }
-        .demo-hint { font-size: 13px; color: #4d6f91; background: #eef4fb; padding: 6px 18px; border-radius: 60px; display: inline-flex; align-items: center; gap: 8px; }
-        .demo-tip { font-size: 13px; background: #d9e7fc; border-radius: 50px; padding: 4px 14px; color: #00337a; display: inline-block; }
-
-        .photo-preview-area { display: flex; gap: 20px; margin: 10px 0; flex-wrap: wrap; }
-        .photo-box { flex: 1; min-width: 100px; background: white; border-radius: 16px; padding: 12px; text-align: center; border: 2px dashed #ccdcee; }
-        .photo-box img { max-width: 100%; height: auto; border-radius: 12px; max-height: 140px; }
-        .photo-box .placeholder-text { color: #a0b8d0; font-size: 13px; padding: 20px 0; }
-        .photo-box .label { font-size: 12px; color: #5f7d9c; margin-bottom: 6px; display: block; }
-
         .slider-item { display: flex; align-items: center; gap: 8px 4px; flex: 1 0 80px; }
         .slider-item span { font-size: 13px; color: #1f4970; font-weight: 500; min-width: 28px; }
         input[type=range] { width: 100%; max-width: 100px; height: 5px; -webkit-appearance: none; background: #cbdae9; border-radius: 10px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #1f6ed4; border-radius: 20px; cursor: pointer; }
         .value-badge { background: #dfe9f5; padding: 2px 12px; border-radius: 30px; font-size: 13px; font-weight: 500; color: #00337a; min-width: 34px; text-align: center; }
-
+        .training-log { background: #0a1a2f; color: #b0d4f0; border-radius: 16px; padding: 14px 18px; font-family: 'Courier New', monospace; font-size: 13px; max-height: 160px; overflow-y: auto; margin-top: 10px; line-height: 1.7; }
+        .training-log .log-ok { color: #7ddf9a; }
+        .training-log .log-info { color: #8ab8e6; }
+        .weight-bar { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+        .weight-bar .bar-label { font-size: 12px; color: #4d6f91; min-width: 40px; }
+        .weight-bar .bar-track { flex: 1; min-width: 60px; height: 8px; background: #e2eaf3; border-radius: 10px; overflow: hidden; }
+        .weight-bar .bar-fill { height: 100%; background: linear-gradient(90deg, #2b7be4, #1a8b4c); border-radius: 10px; transition: width 0.3s; }
+        .photo-preview-area { display: flex; gap: 20px; margin: 10px 0; flex-wrap: wrap; }
+        .photo-box { flex: 1; min-width: 100px; background: white; border-radius: 16px; padding: 12px; text-align: center; border: 2px dashed #ccdcee; }
+        .photo-box img { max-width: 100%; height: auto; border-radius: 12px; max-height: 140px; }
+        .photo-box .placeholder-text { color: #a0b8d0; font-size: 13px; padding: 20px 0; }
+        .photo-box .label { font-size: 12px; color: #5f7d9c; margin-bottom: 6px; display: block; }
+        .file-upload { background: white; border: 1px solid #ccdcee; border-radius: 60px; padding: 6px 18px 6px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.15s; flex: 1 1 160px; }
+        .file-upload:hover { background: #edf4fe; border-color: #8ab3e6; }
+        .file-upload input { display: none; }
         .rec-list { width: 100%; background: white; border-radius: 16px; padding: 8px 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
         .rec-item { display: flex; justify-content: space-between; border-bottom: 1px solid #e5edf6; padding: 8px 4px; font-size: 15px; }
         .rec-item:last-child { border: none; }
         .rec-item .label { color: #1a3a57; }
         .rec-item .score { background: #dae6f5; padding: 0 14px; border-radius: 50px; font-weight: 500; font-size: 13px; color: #00337a; }
-
-        .training-log { background: #0a1a2f; color: #b0d4f0; border-radius: 16px; padding: 14px 18px; font-family: 'Courier New', monospace; font-size: 13px; max-height: 160px; overflow-y: auto; margin-top: 10px; line-height: 1.7; }
-        .training-log .log-ok { color: #7ddf9a; }
-        .training-log .log-err { color: #f7a58a; }
-        .training-log .log-info { color: #8ab8e6; }
-
-        .weight-bar { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
-        .weight-bar .bar-label { font-size: 12px; color: #4d6f91; min-width: 40px; }
-        .weight-bar .bar-track { flex: 1; min-width: 60px; height: 8px; background: #e2eaf3; border-radius: 10px; overflow: hidden; }
-        .weight-bar .bar-fill { height: 100%; background: linear-gradient(90deg, #2b7be4, #1a8b4c); border-radius: 10px; transition: width 0.3s; }
-
-        .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
-        .footnote i { color: #2b7be4; margin-right: 4px; }
         .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; }
         .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
-        .training-badge { display: inline-block; background: #d48c1a; color: white; border-radius: 30px; padding: 0 14px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+        .demo-tip { font-size: 13px; background: #d9e7fc; border-radius: 50px; padding: 4px 14px; color: #00337a; display: inline-block; }
         .label-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
         .label-tag { background: #d4e2fc; color: #1a4c8a; padding: 2px 12px; border-radius: 30px; font-size: 12px; }
+        .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
+        .footnote i { color: #2b7be4; margin-right: 4px; }
     </style>
 </head>
 <body>
@@ -97,7 +79,7 @@
 
     <div class="demo-grid">
 
-        <!-- ===== 人脸识别（训练+推理） ===== -->
+        <!-- ===== 人脸识别 ===== -->
         <div class="case-panel">
             <div class="panel-title">
                 <i class="fas fa-user-check"></i> 校园人脸识别签到
@@ -105,29 +87,27 @@
                 <span class="status-tag" id="faceStatusTag">⏳ 未训练</span>
             </div>
 
-            <!-- 训练集 -->
             <div class="input-area">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                     <i class="fas fa-database" style="color:#1f6ed4;"></i>
                     <span style="font-weight:500; font-size:15px;">步骤0：准备训练数据集</span>
                     <span class="demo-tip">每人2-3张</span>
                 </div>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                     <button class="btn btn-primary" id="addTrainBtn"><i class="fas fa-plus"></i> 📤 添加训练照片</button>
-                    <button class="btn btn-outline" id="clearTrainBtn" style="font-size:12px;"><i class="fas fa-trash"></i> 清空</button>
+                    <button class="btn btn-outline" id="clearTrainBtn" style="font-size:12px;"><i class="fas fa-trash"></i> 清空全部</button>
                     <span style="font-size:13px; color:#4d6f91; margin-left:4px;" id="trainCountDisplay">已添加 0 张</span>
                 </div>
-                <div style="margin-top:6px; font-size:13px; color:#3a6a8a;" id="trainSetInfo">💡 点击「添加训练照片」→ 多选照片 → 输入标签（如：张三）</div>
+                <div style="margin-top:6px; font-size:13px; color:#3a6a8a;" id="trainSetInfo">💡 点击按钮 → 多选照片 → 输入标签（如：张三）</div>
                 <div class="label-group" id="labelGroup"></div>
-                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;" id="trainPreviewThumbs"></div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;" id="trainPreviewThumbs"></div>
             </div>
 
-            <!-- 训练控制 -->
             <div class="input-area" style="background:#eaf3fe;">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-cogs" style="color:#d48c1a;"></i>
                     <span style="font-weight:500; font-size:15px;">步骤1：开始训练</span>
-                    <span class="demo-tip">点击后执行正向+反向传播</span>
+                    <span class="demo-tip">正向+反向传播</span>
                 </div>
                 <div class="input-row">
                     <button class="btn btn-warning" id="faceTrainBtn"><i class="fas fa-play"></i> 🚀 开始训练</button>
@@ -139,9 +119,7 @@
                         <span style="font-size:12px; color:#8a6a1a; margin-left:4px;">⚠️ 0.6以上易震荡</span>
                     </div>
                 </div>
-                <div class="training-log" id="faceTrainLog">
-                    <div class="log-info">⏳ 等待训练...</div>
-                </div>
+                <div class="training-log" id="faceTrainLog"><div class="log-info">⏳ 等待训练...</div></div>
                 <div class="weight-bar">
                     <span class="bar-label">权重收敛</span>
                     <div class="bar-track"><div class="bar-fill" id="weightBarFace" style="width:5%;"></div></div>
@@ -149,7 +127,6 @@
                 </div>
             </div>
 
-            <!-- 推理 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-camera-retro" style="color:#1a8b4c;"></i>
@@ -179,7 +156,7 @@
             </div>
         </div>
 
-        <!-- ===== 短视频推荐（训练+推理） ===== -->
+        <!-- ===== 短视频推荐 ===== -->
         <div class="case-panel">
             <div class="panel-title">
                 <i class="fas fa-thumbs-up"></i> 短视频个性化推荐
@@ -221,9 +198,7 @@
                         <span class="value-badge" id="recTrainLrVal">0.3</span>
                     </div>
                 </div>
-                <div class="training-log" id="recTrainLog">
-                    <div class="log-info">⏳ 等待训练...</div>
-                </div>
+                <div class="training-log" id="recTrainLog"><div class="log-info">⏳ 等待训练...</div></div>
                 <div class="weight-bar">
                     <span class="bar-label">权重收敛</span>
                     <div class="bar-track"><div class="bar-fill" id="weightBarRec" style="width:5%;"></div></div>
@@ -263,7 +238,6 @@
         <span><i class="fas fa-cube"></i> 训练 → 推理 → 可视化</span>
         <span><i class="fas fa-arrow-right"></i> 正向传播 · 误差计算 · 反向传播</span>
         <span><i class="fas fa-weight-hanging"></i> 权重随训练更新，推理不修改</span>
-        <span><i class="fas fa-code"></i> 教学演示 · 概念可视化</span>
     </div>
 </div>
 
@@ -313,7 +287,6 @@
         input.onchange = function(e) {
             const files = this.files;
             if (!files || files.length === 0) return;
-            // 弹窗输入标签
             const label = prompt('请输入这 ' + files.length + ' 张照片的标签（如：张三、李四）：', '张三');
             if (label === null || label.trim() === '') {
                 alert('标签不能为空！');
@@ -332,9 +305,6 @@
                 };
                 reader.readAsDataURL(f);
             }
-            // 如果文件数量为0，不触发
-            if (files.length === 0) return;
-            // 但上面的循环会处理，这里用loaded计数
         };
         input.click();
     });
@@ -351,16 +321,14 @@
         trainCountDisplay.textContent = '已添加 ' + trainData.length + ' 张';
         const labels = [...new Set(trainData.map(d => d.label))];
         if (trainData.length === 0) {
-            trainSetInfo.textContent = '💡 点击「添加训练照片」→ 多选照片 → 输入标签（如：张三）';
+            trainSetInfo.textContent = '💡 点击按钮 → 多选照片 → 输入标签（如：张三）';
             labelGroup.innerHTML = '';
             trainPreviewThumbs.innerHTML = '';
             trainPreviewSample.innerHTML = '<div class="placeholder-text">训练后显示</div>';
             return;
         }
         trainSetInfo.textContent = '📋 训练集：共 ' + trainData.length + ' 张照片，标签：' + labels.join('、');
-        // 标签显示
         labelGroup.innerHTML = labels.map(l => `<span class="label-tag"><i class="fas fa-tag"></i> ${l}</span>`).join('');
-        // 缩略图
         trainPreviewThumbs.innerHTML = '';
         const maxShow = 12;
         for (let i=0; i<Math.min(trainData.length, maxShow); i++) {
@@ -377,7 +345,6 @@
             span.style.fontSize = '12px'; span.style.color = '#6a8aaa';
             trainPreviewThumbs.appendChild(span);
         }
-        // 示例
         const sample = trainData[0];
         const img = document.createElement('img');
         img.src = sample.dataURL;
