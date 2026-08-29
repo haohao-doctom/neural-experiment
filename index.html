@@ -68,10 +68,122 @@
         .label-tag { background: #d4e2fc; color: #1a4c8a; padding: 2px 12px; border-radius: 30px; font-size: 12px; }
         .weight-display { background: #1a2a3f; border-radius: 12px; padding: 10px 16px; margin-top: 8px; font-family: 'Courier New', monospace; font-size: 14px; color: #f7d44a; border-left: 3px solid #f7d44a; }
         .weight-display .label { color: #8ab8e6; font-size: 12px; }
-        .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
-        .footnote i { color: #2b7be4; margin-right: 4px; }
         .rec-weight-display { background: #1a2a3f; border-radius: 12px; padding: 10px 16px; margin-top: 8px; font-family: 'Courier New', monospace; font-size: 14px; color: #f7d44a; border-left: 3px solid #f7d44a; }
         .rec-weight-display .label { color: #8ab8e6; font-size: 12px; }
+        .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
+        .footnote i { color: #2b7be4; margin-right: 4px; }
+
+        /* 神经网络结构图 */
+        .network-viz {
+            background: #0a1a2f;
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin-top: 10px;
+            border: 1px solid #1a3a5f;
+        }
+        .network-viz .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .network-viz .title-row span {
+            color: #8ab8e6;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .network-viz .layer-row {
+            display: flex;
+            gap: 6px;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+        .network-viz .layer-box {
+            flex: 1;
+            min-width: 60px;
+            background: #142a44;
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            border: 2px solid #1a3a5f;
+            transition: all 0.3s;
+        }
+        .network-viz .layer-box.active {
+            border-color: #f7d44a;
+            background: #1a3a5f;
+            box-shadow: 0 0 15px rgba(247, 212, 74, 0.15);
+        }
+        .network-viz .layer-box.done {
+            border-color: #7ddf9a;
+            background: #1a4a3a;
+        }
+        .network-viz .layer-box .layer-name {
+            font-size: 11px;
+            color: #8ab8e6;
+            font-weight: 600;
+        }
+        .network-viz .layer-box .layer-sub {
+            font-size: 10px;
+            color: #5a8aaa;
+            margin-top: 2px;
+        }
+        .network-viz .layer-box .layer-status {
+            font-size: 10px;
+            margin-top: 4px;
+            color: #5a8aaa;
+        }
+        .network-viz .layer-box .layer-status.done { color: #7ddf9a; }
+        .network-viz .layer-box .layer-status.active { color: #f7d44a; }
+        .network-viz .arrow-symbol {
+            color: #3a5a7a;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            padding: 0 2px;
+        }
+        .network-viz .layer-box.hidden-layer {
+            display: none;
+        }
+        .network-viz .layer-box.hidden-layer.show {
+            display: block;
+        }
+
+        .layer-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .layer-slider-row label {
+            font-size: 13px;
+            color: #8ab8e6;
+            font-weight: 500;
+        }
+        .layer-slider-row input[type=range] {
+            flex: 1;
+            min-width: 100px;
+            max-width: 200px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #1a3a5f;
+            border-radius: 4px;
+        }
+        .layer-slider-row input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #f7d44a;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .layer-slider-row .layer-count {
+            color: #f7d44a;
+            font-weight: bold;
+            font-size: 15px;
+            min-width: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -92,6 +204,7 @@
                 <span class="status-tag" id="faceStatusTag">⏳ 未训练</span>
             </div>
 
+            <!-- 训练集 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                     <i class="fas fa-database" style="color:#1f6ed4;"></i>
@@ -108,6 +221,7 @@
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;" id="trainPreviewThumbs"></div>
             </div>
 
+            <!-- 训练 + 网络结构 -->
             <div class="input-area" style="background:#eaf3fe;">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-cogs" style="color:#d48c1a;"></i>
@@ -124,6 +238,51 @@
                         <span style="font-size:12px; color:#8a6a1a; margin-left:4px;">⚠️ 0.6以上易震荡</span>
                     </div>
                 </div>
+
+                <!-- 神经网络结构图 -->
+                <div class="network-viz" id="networkViz">
+                    <div class="title-row">
+                        <span>🧠 神经网络内部结构</span>
+                        <span style="font-size:11px; color:#5a8aaa;">拖动下方滑块改变隐藏层数</span>
+                    </div>
+                    <div class="layer-slider-row">
+                        <label>隐藏层数：</label>
+                        <input type="range" min="1" max="3" value="3" id="layerCountSlider">
+                        <span class="layer-count" id="layerCountDisplay">3</span>
+                    </div>
+                    <div class="layer-row" id="layerRow" style="margin-top:8px;">
+                        <div class="layer-box done" id="inputLayer">
+                            <div class="layer-name">📥 输入层</div>
+                            <div class="layer-sub">(像素)</div>
+                            <div class="layer-status done">✅ 已就绪</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box hidden-layer show" id="hiddenLayer1">
+                            <div class="layer-name">🔍 隐藏层1</div>
+                            <div class="layer-sub">(线条)</div>
+                            <div class="layer-status" id="h1Status">⏳ 等待</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box hidden-layer show" id="hiddenLayer2">
+                            <div class="layer-name">🔍 隐藏层2</div>
+                            <div class="layer-sub">(五官)</div>
+                            <div class="layer-status" id="h2Status">⏳ 等待</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box hidden-layer show" id="hiddenLayer3">
+                            <div class="layer-name">🔍 隐藏层3</div>
+                            <div class="layer-sub">(脸谱)</div>
+                            <div class="layer-status" id="h3Status">⏳ 等待</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box" id="outputLayer">
+                            <div class="layer-name">📤 输出层</div>
+                            <div class="layer-sub">(判断)</div>
+                            <div class="layer-status" id="outputStatus">⏳ 等待</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="training-log" id="faceTrainLog"><div class="log-info">⏳ 等待训练...</div></div>
                 <div class="weight-bar">
                     <span class="bar-label">权重收敛</span>
@@ -136,6 +295,7 @@
                 </div>
             </div>
 
+            <!-- 推理 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-camera-retro" style="color:#1a8b4c;"></i>
@@ -252,7 +412,7 @@
         <span><i class="fas fa-cube"></i> 训练 → 推理 → 可视化</span>
         <span><i class="fas fa-arrow-right"></i> 正向传播 · 误差计算 · 反向传播</span>
         <span><i class="fas fa-weight-hanging"></i> 权重随训练更新，推理不修改</span>
-        <span><i class="fas fa-code"></i> 权重数值直接显示在界面上</span>
+        <span><i class="fas fa-code"></i> 隐藏层数可调 · 逐层可视化</span>
     </div>
 </div>
 
@@ -287,9 +447,59 @@
     const trainLrSlider = document.getElementById('trainLrSlider');
     const trainLrVal = document.getElementById('trainLrVal');
 
+    // 网络结构元素
+    const layerCountSlider = document.getElementById('layerCountSlider');
+    const layerCountDisplay = document.getElementById('layerCountDisplay');
+    const hiddenLayer1 = document.getElementById('hiddenLayer1');
+    const hiddenLayer2 = document.getElementById('hiddenLayer2');
+    const hiddenLayer3 = document.getElementById('hiddenLayer3');
+    const h1Status = document.getElementById('h1Status');
+    const h2Status = document.getElementById('h2Status');
+    const h3Status = document.getElementById('h3Status');
+    const outputStatus = document.getElementById('outputStatus');
+    const inputLayer = document.getElementById('inputLayer');
+    const outputLayer = document.getElementById('outputLayer');
+
     let trainData = [];
     let trainedWeights = null;
     let isFaceTrained = false;
+
+    // 层数滑块控制
+    function updateLayerVisibility(count) {
+        const countNum = parseInt(count);
+        layerCountDisplay.textContent = countNum;
+        hiddenLayer1.classList.toggle('show', countNum >= 1);
+        hiddenLayer2.classList.toggle('show', countNum >= 2);
+        hiddenLayer3.classList.toggle('show', countNum >= 3);
+        // 重置状态文字
+        if (countNum >= 1) h1Status.textContent = '⏳ 等待';
+        if (countNum >= 2) h2Status.textContent = '⏳ 等待';
+        if (countNum >= 3) h3Status.textContent = '⏳ 等待';
+    }
+
+    layerCountSlider.addEventListener('input', function() {
+        updateLayerVisibility(this.value);
+    });
+
+    // 重置所有层状态
+    function resetLayerStatus() {
+        const count = parseInt(layerCountSlider.value);
+        h1Status.textContent = count >= 1 ? '⏳ 等待' : '';
+        h1Status.className = 'layer-status';
+        h2Status.textContent = count >= 2 ? '⏳ 等待' : '';
+        h2Status.className = 'layer-status';
+        h3Status.textContent = count >= 3 ? '⏳ 等待' : '';
+        h3Status.className = 'layer-status';
+        outputStatus.textContent = '⏳ 等待';
+        outputStatus.className = 'layer-status';
+        inputLayer.className = 'layer-box';
+        outputLayer.className = 'layer-box';
+        hiddenLayer1.className = 'layer-box hidden-layer show';
+        hiddenLayer2.className = 'layer-box hidden-layer show';
+        hiddenLayer3.className = 'layer-box hidden-layer show';
+        // 根据层数显示/隐藏
+        updateLayerVisibility(layerCountSlider.value);
+    }
 
     trainLrSlider.addEventListener('input', function() {
         trainLrVal.textContent = (parseInt(this.value)/10).toFixed(1);
@@ -385,11 +595,61 @@
         faceTrainBtn.textContent = '⏳ 训练中...';
         faceTrainLog.innerHTML = '<div class="log-info">🧠 开始训练...</div>';
         weightDisplayArea.style.display = 'none';
+        resetLayerStatus();
+
         const lr = parseInt(trainLrSlider.value) / 10;
         const epochs = 5;
+        const layerCount = parseInt(layerCountSlider.value);
         let logLines = [];
         let weights = Array.from({length: trainData.length}, () => Math.random() * 0.5 + 0.25);
         let step = 0;
+
+        // 激活层动画
+        function activateLayer(layerNum) {
+            const layers = [
+                { el: inputLayer, status: null, label: '✅ 已处理' },
+                { el: hiddenLayer1, status: h1Status, label: '✅ 已提取' },
+                { el: hiddenLayer2, status: h2Status, label: '✅ 已提取' },
+                { el: hiddenLayer3, status: h3Status, label: '✅ 已提取' },
+                { el: outputLayer, status: outputStatus, label: '✅ 已判断' }
+            ];
+            // 先重置所有
+            layers.forEach((l, idx) => {
+                if (idx === 0) {
+                    l.el.className = 'layer-box';
+                } else if (idx <= layerCount) {
+                    l.el.className = 'layer-box hidden-layer show';
+                } else {
+                    l.el.className = 'layer-box hidden-layer';
+                }
+                if (l.status) {
+                    l.status.textContent = '⏳ 等待';
+                    l.status.className = 'layer-status';
+                }
+            });
+            // 激活到指定层
+            for (let i = 0; i <= Math.min(layerNum, layerCount + 1); i++) {
+                const l = layers[i];
+                if (i === 0) {
+                    l.el.className = 'layer-box done';
+                } else if (i <= layerCount) {
+                    l.el.className = 'layer-box hidden-layer show done';
+                    if (l.status) {
+                        l.status.textContent = '✅ 已提取';
+                        l.status.className = 'layer-status done';
+                    }
+                } else if (i === layerCount + 1) {
+                    l.el.className = 'layer-box done';
+                    if (l.status) {
+                        l.status.textContent = '✅ 已判断';
+                        l.status.className = 'layer-status done';
+                    }
+                }
+            }
+            // 确保显示正确的层数
+            updateLayerVisibility(layerCount);
+        }
+
         const interval = setInterval(() => {
             if (step >= epochs) {
                 clearInterval(interval);
@@ -402,6 +662,8 @@
                 const weightStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
                 weightValuesFace.textContent = '[' + weightStr + ']';
                 weightDisplayArea.style.display = 'block';
+                // 激活所有层
+                activateLayer(layerCount + 1);
                 faceTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
                 faceTrainLog.innerHTML += `<div class="log-info">💡 权重已固定，后续推理不会修改权重</div>`;
                 faceTrainLog.innerHTML += `<div class="weight-value">📊 最终权重值： [${weightStr}]</div>`;
@@ -410,6 +672,9 @@
                 inferNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
                 return;
             }
+            // 激活当前层（模拟逐层处理）
+            activateLayer(step + 1);
+
             let totalLoss = 0;
             for (let i = 0; i < trainData.length; i++) {
                 const pred = Math.min(1, weights[i] * (0.8 + Math.random() * 0.4));
@@ -453,6 +718,7 @@
         trainPreviewSample.innerHTML = '<div class="placeholder-text">训练后显示</div>';
         labelGroup.innerHTML = '';
         trainPreviewThumbs.innerHTML = '';
+        resetLayerStatus();
     });
 
     let inferImageData = null;
@@ -489,6 +755,10 @@
         faceLabel.textContent = isMatch ? `✅ ${randomLabel}（匹配）` : '❌ 不匹配（外来人员）';
         faceLabel.style.color = isMatch ? '#1a8b4c' : '#b02a1a';
         faceConfidence.textContent = `置信度 ${Math.round(conf*100)}%`;
+        // 激活输出层
+        outputStatus.textContent = '✅ 已判断';
+        outputStatus.className = 'layer-status done';
+        outputLayer.className = 'layer-box done';
     });
 
     inferResetBtn.addEventListener('click', function() {
@@ -499,6 +769,7 @@
         faceLabel.textContent = '等待推理';
         faceLabel.style.color = '#0a2647';
         faceConfidence.textContent = '置信度 --%';
+        resetLayerStatus();
     });
 
     // ============================================================
@@ -692,7 +963,10 @@
         recInferResult.textContent = '💡 点击「推理推荐」查看结果';
     });
 
+    // 初始化
     updateTrainUI();
+    resetLayerStatus();
+    updateLayerVisibility(layerCountSlider.value);
 })();
 </script>
 </body>
