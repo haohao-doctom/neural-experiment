@@ -184,6 +184,22 @@
             min-width: 20px;
             text-align: center;
         }
+
+        /* 用户输入兴趣显示 - 移到推荐列表上方 */
+        .user-interest-display {
+            background: #1a2a3f;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin: 8px 0 4px 0;
+            font-size: 14px;
+            color: #8ab8e6;
+            border-left: 3px solid #2b7be4;
+            display: none;
+        }
+        .user-interest-display .highlight {
+            color: #f7d44a;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -427,6 +443,7 @@
                 </div>
             </div>
 
+            <!-- 推理 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-sliders-h" style="color:#1a8b4c;"></i>
@@ -444,6 +461,13 @@
                     <button class="btn btn-outline" id="recInferResetBtn"><i class="fas fa-undo-alt"></i> 重置</button>
                     <span style="font-size:12px; color:#4d6f91; margin-left:12px;" id="recInferNote">💡 使用训练好的权重预测兴趣</span>
                 </div>
+                
+                <!-- ★★★ 用户输入兴趣 - 移到推荐列表上面 ★★★ -->
+                <div class="user-interest-display" id="userInterestDisplay">
+                    📊 <span class="highlight">用户输入兴趣：</span>
+                    <span id="userInterestText">美食 0.5，搞笑 0.5，体育 0.2，美妆 0.3</span>
+                </div>
+
                 <div class="rec-list" id="recList">
                     <div class="rec-item"><span class="label">🍜 深夜食堂 · 红烧肉</span><span class="score">--%</span></div>
                     <div class="rec-item"><span class="label">😂 搞笑喵星人合集</span><span class="score">--%</span></div>
@@ -1083,7 +1107,14 @@
             div.innerHTML = `<span class="label">${item.name}</span><span class="score">${Math.round(item.score*100)}%</span>`;
             recList.appendChild(div);
         });
-        recInferResult.textContent = `📊 用户输入兴趣：美食 ${input.food.toFixed(1)}，搞笑 ${input.funny.toFixed(1)}，体育 ${input.sports.toFixed(1)}，美妆 ${input.beauty.toFixed(1)} → 推荐结果如上`;
+
+        // 更新用户输入兴趣显示（放在推荐列表上方）
+        const userInterestDisplay = document.getElementById('userInterestDisplay');
+        const userInterestText = document.getElementById('userInterestText');
+        userInterestDisplay.style.display = 'block';
+        userInterestText.textContent = `美食 ${input.food.toFixed(1)}，搞笑 ${input.funny.toFixed(1)}，体育 ${input.sports.toFixed(1)}，美妆 ${input.beauty.toFixed(1)}`;
+
+        recInferResult.textContent = `✅ 推荐完成！`;
         // 激活输出层
         recOutputStatus.textContent = '✅ 已判断';
         recOutputStatus.className = 'layer-status done';
@@ -1104,6 +1135,7 @@
         `;
         recInferResult.textContent = '💡 用户调整兴趣滑块后，点击「推理推荐」查看结果';
         resetRecLayerStatus();
+        document.getElementById('userInterestDisplay').style.display = 'none';
     });
 
     // 初始化
