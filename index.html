@@ -48,11 +48,11 @@
         .weight-bar .bar-label { font-size: 12px; color: #4d6f91; min-width: 40px; }
         .weight-bar .bar-track { flex: 1; min-width: 60px; height: 8px; background: #e2eaf3; border-radius: 10px; overflow: hidden; }
         .weight-bar .bar-fill { height: 100%; background: linear-gradient(90deg, #2b7be4, #1a8b4c); border-radius: 10px; transition: width 0.3s; }
-        .photo-preview-area { display: flex; gap: 20px; margin: 10px 0; flex-wrap: wrap; }
-        .photo-box { flex: 1; min-width: 100px; background: white; border-radius: 16px; padding: 12px; text-align: center; border: 2px dashed #ccdcee; }
-        .photo-box img { max-width: 100%; height: auto; border-radius: 12px; max-height: 140px; }
-        .photo-box .placeholder-text { color: #a0b8d0; font-size: 13px; padding: 20px 0; }
-        .photo-box .label { font-size: 12px; color: #5f7d9c; margin-bottom: 6px; display: block; }
+        .photo-preview-area { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .photo-box { flex: 0 1 auto; min-width: 80px; background: white; border-radius: 12px; padding: 6px 10px; text-align: center; border: 1px solid #ccdcee; }
+        .photo-box img { max-width: 80px; max-height: 80px; border-radius: 8px; }
+        .photo-box .placeholder-text { color: #a0b8d0; font-size: 11px; padding: 10px 0; }
+        .photo-box .label { font-size: 10px; color: #5f7d9c; display: block; margin-bottom: 2px; }
         .file-upload { background: white; border: 1px solid #ccdcee; border-radius: 60px; padding: 6px 18px 6px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.15s; flex: 1 1 160px; }
         .file-upload:hover { background: #edf4fe; border-color: #8ab3e6; }
         .file-upload input { display: none; }
@@ -73,13 +73,14 @@
         .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
         .footnote i { color: #2b7be4; margin-right: 4px; }
 
-        /* 神经网络结构图 - 独立面板 */
+        /* 神经网络结构图 - 黑色背景独立，放在卡片最上方 */
         .network-viz {
             background: #0a1a2f;
             border-radius: 16px;
             padding: 16px 18px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             border: 1px solid #1a3a5f;
+            width: 100%;
         }
         .network-viz .title-row {
             display: flex;
@@ -108,11 +109,6 @@
             border: 2px solid #1a3a5f;
             transition: all 0.3s;
         }
-        .network-viz .layer-box.active {
-            border-color: #f7d44a;
-            background: #1a3a5f;
-            box-shadow: 0 0 15px rgba(247, 212, 74, 0.15);
-        }
         .network-viz .layer-box.done {
             border-color: #7ddf9a;
             background: #1a4a3a;
@@ -133,7 +129,6 @@
             color: #5a8aaa;
         }
         .network-viz .layer-box .layer-status.done { color: #7ddf9a; }
-        .network-viz .layer-box .layer-status.active { color: #f7d44a; }
         .network-viz .arrow-symbol {
             color: #3a5a7a;
             font-size: 16px;
@@ -184,8 +179,6 @@
             min-width: 20px;
             text-align: center;
         }
-
-        /* 用户输入兴趣显示 - 放在推荐列表上方 */
         .user-interest-display {
             background: #1a2a3f;
             border-radius: 12px;
@@ -199,6 +192,18 @@
         .user-interest-display .highlight {
             color: #f7d44a;
             font-weight: 500;
+        }
+        .section-title {
+            font-weight: 500;
+            font-size: 15px;
+            color: #0b2b4a;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i {
+            color: #2b7be4;
         }
     </style>
 </head>
@@ -220,24 +225,7 @@
                 <span class="status-tag" id="faceStatusTag">⏳ 未训练</span>
             </div>
 
-            <!-- 步骤0：训练集 -->
-            <div class="input-area">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                    <i class="fas fa-database" style="color:#1f6ed4;"></i>
-                    <span style="font-weight:500; font-size:15px;">步骤0：准备训练数据集</span>
-                    <span class="demo-tip">每人2-3张</span>
-                </div>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
-                    <button class="btn btn-primary" id="addTrainBtn"><i class="fas fa-plus"></i> 📤 添加训练照片</button>
-                    <button class="btn btn-outline" id="clearTrainBtn" style="font-size:12px;"><i class="fas fa-trash"></i> 清空全部</button>
-                    <span style="font-size:13px; color:#4d6f91; margin-left:4px;" id="trainCountDisplay">已添加 0 张</span>
-                </div>
-                <div style="margin-top:6px; font-size:13px; color:#3a6a8a;" id="trainSetInfo">💡 点击按钮 → 多选照片 → 输入标签（如：张三）</div>
-                <div class="label-group" id="labelGroup"></div>
-                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;" id="trainPreviewThumbs"></div>
-            </div>
-
-            <!-- 神经网络结构图 -->
+            <!-- 🧠 神经网络结构图 - 黑色背景独立放在最上方 -->
             <div class="network-viz" id="networkViz">
                 <div class="title-row">
                     <span>🧠 神经网络内部结构</span>
@@ -281,13 +269,22 @@
                 </div>
             </div>
 
-            <!-- 步骤1：训练 -->
-            <div class="input-area" style="background:#eaf3fe;">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-                    <i class="fas fa-cogs" style="color:#d48c1a;"></i>
-                    <span style="font-weight:500; font-size:15px;">步骤1：开始训练</span>
-                    <span class="demo-tip">正向+反向传播</span>
+            <!-- 步骤0 -->
+            <div class="input-area">
+                <div class="section-title"><i class="fas fa-database"></i> 步骤0：准备训练数据集</div>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                    <button class="btn btn-primary" id="addTrainBtn"><i class="fas fa-plus"></i> 📤 添加训练照片</button>
+                    <button class="btn btn-outline" id="clearTrainBtn" style="font-size:12px;"><i class="fas fa-trash"></i> 清空全部</button>
+                    <span style="font-size:13px; color:#4d6f91; margin-left:4px;" id="trainCountDisplay">已添加 0 张</span>
                 </div>
+                <div style="margin-top:6px; font-size:13px; color:#3a6a8a;" id="trainSetInfo">💡 点击按钮 → 多选照片 → 输入标签（如：张三）</div>
+                <div class="label-group" id="labelGroup"></div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;" id="trainPreviewThumbs"></div>
+            </div>
+
+            <!-- 步骤1 -->
+            <div class="input-area" style="background:#eaf3fe;">
+                <div class="section-title"><i class="fas fa-cogs" style="color:#d48c1a;"></i> 步骤1：开始训练</div>
                 <div class="input-row">
                     <button class="btn btn-warning" id="faceTrainBtn"><i class="fas fa-play"></i> 🚀 开始训练</button>
                     <button class="btn btn-outline" id="faceResetTrainBtn"><i class="fas fa-undo-alt"></i> 重置训练</button>
@@ -310,25 +307,27 @@
                 </div>
             </div>
 
-            <!-- 步骤2：推理 -->
+            <!-- 步骤2 -->
             <div class="input-area">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-                    <i class="fas fa-camera-retro" style="color:#1a8b4c;"></i>
-                    <span style="font-weight:500; font-size:15px;">步骤2：推理（签到比对）</span>
-                    <span class="demo-tip">不修改权重</span>
-                </div>
-                <div class="input-row">
-                    <div class="file-upload" onclick="document.getElementById('inferUpload').click();" style="flex:1;">
+                <div class="section-title"><i class="fas fa-camera-retro" style="color:#1a8b4c;"></i> 步骤2：推理（签到比对）</div>
+                <div class="input-row" style="flex-wrap: nowrap; align-items: center;">
+                    <div class="file-upload" onclick="document.getElementById('inferUpload').click();" style="flex: 0 1 auto;">
                         <i class="fas fa-camera"></i> 上传测试照片
                         <input type="file" accept="image/*" id="inferUpload" style="display:none;">
                         <span style="margin-left:auto; font-size:12px; color:#4b6f92;" id="inferFileName">未选择</span>
                     </div>
-                    <button class="btn btn-success" id="inferBtn"><i class="fas fa-search"></i> 拍照比对（推理）</button>
+                    <button class="btn btn-success" id="inferBtn"><i class="fas fa-search"></i> 推理比对</button>
                     <button class="btn btn-outline" id="inferResetBtn"><i class="fas fa-undo-alt"></i> 重置</button>
-                </div>
-                <div class="photo-preview-area">
-                    <div class="photo-box"><span class="label">📤 训练集示例</span><div id="trainPreviewSample"><div class="placeholder-text">训练后显示</div></div></div>
-                    <div class="photo-box"><span class="label">📸 测试照片</span><div id="inferPreview"><div class="placeholder-text">等待上传</div></div></div>
+                    <div class="photo-preview-area" style="flex: 1; justify-content: flex-end;">
+                        <div class="photo-box">
+                            <span class="label">📤 训练集示例</span>
+                            <div id="trainPreviewSample"><div class="placeholder-text">训练后显示</div></div>
+                        </div>
+                        <div class="photo-box">
+                            <span class="label">📸 测试照片</span>
+                            <div id="inferPreview"><div class="placeholder-text">等待上传</div></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="output-area" style="margin-top:8px;">
                     <div class="output-row">
@@ -348,28 +347,7 @@
                 <span class="status-tag" id="recStatusTag">⏳ 未训练</span>
             </div>
 
-            <!-- 步骤0：训练数据 -->
-            <div class="input-area">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-                    <i class="fas fa-database" style="color:#1f6ed4;"></i>
-                    <span style="font-weight:500; font-size:15px;">步骤0：训练数据（用户行为+标签）</span>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:14px;">
-                    <div style="background:white; border-radius:12px; padding:10px 12px; border:1px solid #e2ecf5;">
-                        <div style="font-weight:600;">用户A</div>
-                        <div style="font-size:12px; color:#4d6f91;">🍜 美食: 20次 👍15 &nbsp;|&nbsp; 🏀 体育: 3次 👎3</div>
-                        <div style="font-size:12px; color:#1a6a3a;">✅ 真实标签: 美食 0.8, 搞笑 0.1, 体育 0.1, 美妆 0.0</div>
-                    </div>
-                    <div style="background:white; border-radius:12px; padding:10px 12px; border:1px solid #e2ecf5;">
-                        <div style="font-weight:600;">用户B</div>
-                        <div style="font-size:12px; color:#4d6f91;">😂 搞笑: 25次 👍10 &nbsp;|&nbsp; 💄 美妆: 1次 👎1</div>
-                        <div style="font-size:12px; color:#1a6a3a;">✅ 真实标签: 美食 0.1, 搞笑 0.7, 体育 0.1, 美妆 0.1</div>
-                    </div>
-                </div>
-                <div style="margin-top:6px; font-size:12px; color:#6a8aaa;">👆 这是AI的“练习题+标准答案”，训练时用来计算误差</div>
-            </div>
-
-            <!-- 推荐结构图 -->
+            <!-- 🧠 推荐结构图 - 黑色背景独立放在最上方 -->
             <div class="network-viz" id="recNetworkViz">
                 <div class="title-row">
                     <span>🧠 神经网络内部结构</span>
@@ -413,13 +391,27 @@
                 </div>
             </div>
 
-            <!-- 步骤1：训练 -->
-            <div class="input-area" style="background:#eaf3fe;">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-                    <i class="fas fa-cogs" style="color:#d48c1a;"></i>
-                    <span style="font-weight:500; font-size:15px;">步骤1：开始训练</span>
-                    <span class="demo-tip">正向+反向传播</span>
+            <!-- 步骤0 -->
+            <div class="input-area">
+                <div class="section-title"><i class="fas fa-database"></i> 步骤0：训练数据（用户行为+标签）</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:14px;">
+                    <div style="background:white; border-radius:12px; padding:10px 12px; border:1px solid #e2ecf5;">
+                        <div style="font-weight:600;">用户A</div>
+                        <div style="font-size:12px; color:#4d6f91;">🍜 美食: 20次 👍15 &nbsp;|&nbsp; 🏀 体育: 3次 👎3</div>
+                        <div style="font-size:12px; color:#1a6a3a;">✅ 真实标签: 美食 0.8, 搞笑 0.1, 体育 0.1, 美妆 0.0</div>
+                    </div>
+                    <div style="background:white; border-radius:12px; padding:10px 12px; border:1px solid #e2ecf5;">
+                        <div style="font-weight:600;">用户B</div>
+                        <div style="font-size:12px; color:#4d6f91;">😂 搞笑: 25次 👍10 &nbsp;|&nbsp; 💄 美妆: 1次 👎1</div>
+                        <div style="font-size:12px; color:#1a6a3a;">✅ 真实标签: 美食 0.1, 搞笑 0.7, 体育 0.1, 美妆 0.1</div>
+                    </div>
                 </div>
+                <div style="margin-top:6px; font-size:12px; color:#6a8aaa;">👆 这是AI的“练习题+标准答案”，训练时用来计算误差</div>
+            </div>
+
+            <!-- 步骤1 -->
+            <div class="input-area" style="background:#eaf3fe;">
+                <div class="section-title"><i class="fas fa-cogs" style="color:#d48c1a;"></i> 步骤1：开始训练</div>
                 <div class="input-row">
                     <button class="btn btn-warning" id="recTrainBtn"><i class="fas fa-play"></i> 🚀 开始训练</button>
                     <button class="btn btn-outline" id="recResetTrainBtn"><i class="fas fa-undo-alt"></i> 重置训练</button>
@@ -443,13 +435,9 @@
                 </div>
             </div>
 
-            <!-- 步骤2：推理 - 用户输入兴趣显示在推荐列表上方 -->
+            <!-- 步骤2 -->
             <div class="input-area">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-                    <i class="fas fa-sliders-h" style="color:#1a8b4c;"></i>
-                    <span style="font-weight:500; font-size:15px;">步骤2：推理（推荐）</span>
-                    <span class="demo-tip">不修改权重</span>
-                </div>
+                <div class="section-title"><i class="fas fa-sliders-h" style="color:#1a8b4c;"></i> 步骤2：推理（推荐）</div>
                 <div style="display:flex; flex-wrap:wrap; gap:8px;">
                     <div class="slider-item" style="flex:1;"><span>🍜 美食</span><input type="range" min="0" max="10" value="5" id="testFood"><span class="value-badge" id="testFoodVal">0.5</span></div>
                     <div class="slider-item" style="flex:1;"><span>😂 搞笑</span><input type="range" min="0" max="10" value="5" id="testFunny"><span class="value-badge" id="testFunnyVal">0.5</span></div>
@@ -461,13 +449,6 @@
                     <button class="btn btn-outline" id="recInferResetBtn"><i class="fas fa-undo-alt"></i> 重置</button>
                     <span style="font-size:12px; color:#4d6f91; margin-left:12px;" id="recInferNote">💡 使用训练好的权重预测兴趣</span>
                 </div>
-
-                <!-- ★★★ 用户输入兴趣显示 - 放在推荐列表正上方 ★★★ -->
-                <div class="user-interest-display" id="userInterestDisplay">
-                    📊 <span class="highlight">用户输入兴趣：</span>
-                    <span id="userInterestText">美食 0.5，搞笑 0.5，体育 0.2，美妆 0.3</span>
-                </div>
-
                 <div class="rec-list" id="recList">
                     <div class="rec-item"><span class="label">🍜 深夜食堂 · 红烧肉</span><span class="score">--%</span></div>
                     <div class="rec-item"><span class="label">😂 搞笑喵星人合集</span><span class="score">--%</span></div>
@@ -849,10 +830,6 @@
     const recTrainLrSlider = document.getElementById('recTrainLrSlider');
     const recTrainLrVal = document.getElementById('recTrainLrVal');
 
-    // 用户输入兴趣显示元素
-    const userInterestDisplay = document.getElementById('userInterestDisplay');
-    const userInterestText = document.getElementById('userInterestText');
-
     const recLayerCountSlider = document.getElementById('recLayerCountSlider');
     const recLayerCountDisplay = document.getElementById('recLayerCountDisplay');
     const recHiddenLayer1 = document.getElementById('recHiddenLayer1');
@@ -913,19 +890,8 @@
     Object.keys(testSliders).forEach(key => {
         testSliders[key].addEventListener('input', function() {
             testValSpans[key].textContent = (parseInt(this.value)/10).toFixed(1);
-            // 实时更新用户输入显示（推理前预览）
-            updateUserInterestDisplay();
         });
     });
-
-    function updateUserInterestDisplay() {
-        const food = parseFloat(testSliders.food.value) / 10;
-        const funny = parseFloat(testSliders.funny.value) / 10;
-        const sports = parseFloat(testSliders.sports.value) / 10;
-        const beauty = parseFloat(testSliders.beauty.value) / 10;
-        userInterestText.textContent = `美食 ${food.toFixed(1)}，搞笑 ${funny.toFixed(1)}，体育 ${sports.toFixed(1)}，美妆 ${beauty.toFixed(1)}`;
-    }
-
     recTrainLrSlider.addEventListener('input', function() {
         recTrainLrVal.textContent = (parseInt(this.value)/10).toFixed(1);
     });
@@ -1069,7 +1035,6 @@
             <div class="rec-item"><span class="label">💄 新手化妆教程</span><span class="score">--%</span></div>
         `;
         resetRecLayerStatus();
-        userInterestDisplay.style.display = 'none';
     });
 
     recInferBtn.addEventListener('click', function() {
@@ -1114,12 +1079,7 @@
             div.innerHTML = `<span class="label">${item.name}</span><span class="score">${Math.round(item.score*100)}%</span>`;
             recList.appendChild(div);
         });
-
-        // 显示用户输入兴趣（放在推荐列表上方）
-        userInterestDisplay.style.display = 'block';
-        updateUserInterestDisplay();
-
-        recInferResult.textContent = `✅ 推荐完成！`;
+        recInferResult.textContent = `📊 用户输入兴趣：美食 ${input.food.toFixed(1)}，搞笑 ${input.funny.toFixed(1)}，体育 ${input.sports.toFixed(1)}，美妆 ${input.beauty.toFixed(1)} → 推荐结果如上`;
         recOutputStatus.textContent = '✅ 已判断';
         recOutputStatus.className = 'layer-status done';
         recOutputLayer.className = 'layer-box done';
@@ -1139,17 +1099,13 @@
         `;
         recInferResult.textContent = '💡 用户调整兴趣滑块后，点击「推理推荐」查看结果';
         resetRecLayerStatus();
-        userInterestDisplay.style.display = 'none';
     });
 
-    // 初始化
     updateTrainUI();
     resetLayerStatus();
     updateLayerVisibility(layerCountSlider.value);
     resetRecLayerStatus();
     updateRecLayerVisibility(recLayerCountSlider.value);
-    // 初始隐藏用户输入显示
-    userInterestDisplay.style.display = 'none';
 })();
 </script>
 </body>
