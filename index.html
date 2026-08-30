@@ -357,7 +357,53 @@
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-cogs" style="color:#d48c1a;"></i>
                     <span style="font-weight:500; font-size:15px;">步骤1：开始训练</span>
+                    <span class="demo-tip">正向+反向传播</span>
                 </div>
+
+                <!-- 推荐部分的神经网络结构图（新增） -->
+                <div class="network-viz" id="recNetworkViz">
+                    <div class="title-row">
+                        <span>🧠 神经网络内部结构</span>
+                        <span style="font-size:11px; color:#5a8aaa;">拖动下方滑块改变隐藏层数</span>
+                    </div>
+                    <div class="layer-slider-row">
+                        <label>隐藏层数：</label>
+                        <input type="range" min="1" max="3" value="3" id="recLayerCountSlider">
+                        <span class="layer-count" id="recLayerCountDisplay">3</span>
+                    </div>
+                    <div class="layer-row" id="recLayerRow" style="margin-top:8px;">
+                        <div class="layer-box done" id="recInputLayer">
+                            <div class="layer-name">📥 输入层</div>
+                            <div class="layer-sub">(行为数据)</div>
+                            <div class="layer-status done">✅ 已就绪</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box hidden-layer show" id="recHiddenLayer1">
+                            <div class="layer-name">🔍 隐藏层1</div>
+                            <div class="layer-sub">(统计)</div>
+                            <div class="layer-status" id="recH1Status">⏳ 等待</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box hidden-layer show" id="recHiddenLayer2">
+                            <div class="layer-name">🔍 隐藏层2</div>
+                            <div class="layer-sub">(兴趣画像)</div>
+                            <div class="layer-status" id="recH2Status">⏳ 等待</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box hidden-layer show" id="recHiddenLayer3">
+                            <div class="layer-name">🔍 隐藏层3</div>
+                            <div class="layer-sub">(特征组合)</div>
+                            <div class="layer-status" id="recH3Status">⏳ 等待</div>
+                        </div>
+                        <div class="arrow-symbol">→</div>
+                        <div class="layer-box" id="recOutputLayer">
+                            <div class="layer-name">📤 输出层</div>
+                            <div class="layer-sub">(推荐排序)</div>
+                            <div class="layer-status" id="recOutputStatus">⏳ 等待</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="input-row">
                     <button class="btn btn-warning" id="recTrainBtn"><i class="fas fa-play"></i> 🚀 开始训练</button>
                     <button class="btn btn-outline" id="recResetTrainBtn"><i class="fas fa-undo-alt"></i> 重置训练</button>
@@ -365,6 +411,7 @@
                         <span style="font-size:13px; color:#1f4970;">学习率</span>
                         <input type="range" min="1" max="10" value="3" id="recTrainLrSlider" style="max-width:80px;">
                         <span class="value-badge" id="recTrainLrVal">0.3</span>
+                        <span style="font-size:12px; color:#8a6a1a; margin-left:4px;">⚠️ 0.6以上易震荡</span>
                     </div>
                 </div>
                 <div class="training-log" id="recTrainLog"><div class="log-info">⏳ 等待训练...</div></div>
@@ -403,7 +450,7 @@
                     <div class="rec-item"><span class="label">🏀 NBA 每日集锦</span><span class="score">--%</span></div>
                     <div class="rec-item"><span class="label">💄 新手化妆教程</span><span class="score">--%</span></div>
                 </div>
-                <div style="font-size:13px; color:#4d6f91; margin-top:6px;" id="recInferResult">💡 点击「推理推荐」查看结果</div>
+                <div style="font-size:13px; color:#4d6f91; margin-top:6px;" id="recInferResult">💡 用户调整兴趣滑块后，点击「推理推荐」查看结果</div>
             </div>
         </div>
     </div>
@@ -447,7 +494,7 @@
     const trainLrSlider = document.getElementById('trainLrSlider');
     const trainLrVal = document.getElementById('trainLrVal');
 
-    // 网络结构元素
+    // 人脸结构图元素
     const layerCountSlider = document.getElementById('layerCountSlider');
     const layerCountDisplay = document.getElementById('layerCountDisplay');
     const hiddenLayer1 = document.getElementById('hiddenLayer1');
@@ -464,7 +511,7 @@
     let trainedWeights = null;
     let isFaceTrained = false;
 
-    // 层数滑块控制
+    // 层数滑块控制（人脸）
     function updateLayerVisibility(count) {
         const countNum = parseInt(count);
         layerCountDisplay.textContent = countNum;
@@ -481,7 +528,7 @@
         updateLayerVisibility(this.value);
     });
 
-    // 重置所有层状态
+    // 重置所有层状态（人脸）
     function resetLayerStatus() {
         const count = parseInt(layerCountSlider.value);
         h1Status.textContent = count >= 1 ? '⏳ 等待' : '';
@@ -497,7 +544,6 @@
         hiddenLayer1.className = 'layer-box hidden-layer show';
         hiddenLayer2.className = 'layer-box hidden-layer show';
         hiddenLayer3.className = 'layer-box hidden-layer show';
-        // 根据层数显示/隐藏
         updateLayerVisibility(layerCountSlider.value);
     }
 
@@ -580,7 +626,7 @@
         trainPreviewSample.innerHTML += `<div style="font-size:11px; color:#4d6f91;">${sample.label}</div>`;
     }
 
-    // 训练
+    // 训练（人脸）
     faceTrainBtn.addEventListener('click', function() {
         if (trainData.length < 2) {
             alert('至少需要2张训练照片！');
@@ -604,7 +650,7 @@
         let weights = Array.from({length: trainData.length}, () => Math.random() * 0.5 + 0.25);
         let step = 0;
 
-        // 激活层动画
+        // 激活层动画（人脸）
         function activateLayer(layerNum) {
             const layers = [
                 { el: inputLayer, status: null, label: '✅ 已处理' },
@@ -613,7 +659,6 @@
                 { el: hiddenLayer3, status: h3Status, label: '✅ 已提取' },
                 { el: outputLayer, status: outputStatus, label: '✅ 已判断' }
             ];
-            // 先重置所有
             layers.forEach((l, idx) => {
                 if (idx === 0) {
                     l.el.className = 'layer-box';
@@ -627,7 +672,6 @@
                     l.status.className = 'layer-status';
                 }
             });
-            // 激活到指定层
             for (let i = 0; i <= Math.min(layerNum, layerCount + 1); i++) {
                 const l = layers[i];
                 if (i === 0) {
@@ -646,7 +690,6 @@
                     }
                 }
             }
-            // 确保显示正确的层数
             updateLayerVisibility(layerCount);
         }
 
@@ -662,7 +705,6 @@
                 const weightStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
                 weightValuesFace.textContent = '[' + weightStr + ']';
                 weightDisplayArea.style.display = 'block';
-                // 激活所有层
                 activateLayer(layerCount + 1);
                 faceTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
                 faceTrainLog.innerHTML += `<div class="log-info">💡 权重已固定，后续推理不会修改权重</div>`;
@@ -672,7 +714,6 @@
                 inferNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
                 return;
             }
-            // 激活当前层（模拟逐层处理）
             activateLayer(step + 1);
 
             let totalLoss = 0;
@@ -755,7 +796,6 @@
         faceLabel.textContent = isMatch ? `✅ ${randomLabel}（匹配）` : '❌ 不匹配（外来人员）';
         faceLabel.style.color = isMatch ? '#1a8b4c' : '#b02a1a';
         faceConfidence.textContent = `置信度 ${Math.round(conf*100)}%`;
-        // 激活输出层
         outputStatus.textContent = '✅ 已判断';
         outputStatus.className = 'layer-status done';
         outputLayer.className = 'layer-box done';
@@ -773,7 +813,7 @@
     });
 
     // ============================================================
-    // 短视频推荐模块
+    // 短视频推荐模块（新增隐藏层数控制）
     // ============================================================
     const recTrainBtn = document.getElementById('recTrainBtn');
     const recResetTrainBtn = document.getElementById('recResetTrainBtn');
@@ -790,6 +830,53 @@
     const recInferNote = document.getElementById('recInferNote');
     const recTrainLrSlider = document.getElementById('recTrainLrSlider');
     const recTrainLrVal = document.getElementById('recTrainLrVal');
+
+    // 推荐结构图元素
+    const recLayerCountSlider = document.getElementById('recLayerCountSlider');
+    const recLayerCountDisplay = document.getElementById('recLayerCountDisplay');
+    const recHiddenLayer1 = document.getElementById('recHiddenLayer1');
+    const recHiddenLayer2 = document.getElementById('recHiddenLayer2');
+    const recHiddenLayer3 = document.getElementById('recHiddenLayer3');
+    const recH1Status = document.getElementById('recH1Status');
+    const recH2Status = document.getElementById('recH2Status');
+    const recH3Status = document.getElementById('recH3Status');
+    const recOutputStatus = document.getElementById('recOutputStatus');
+    const recInputLayer = document.getElementById('recInputLayer');
+    const recOutputLayer = document.getElementById('recOutputLayer');
+
+    // 推荐层数控制
+    function updateRecLayerVisibility(count) {
+        const countNum = parseInt(count);
+        recLayerCountDisplay.textContent = countNum;
+        recHiddenLayer1.classList.toggle('show', countNum >= 1);
+        recHiddenLayer2.classList.toggle('show', countNum >= 2);
+        recHiddenLayer3.classList.toggle('show', countNum >= 3);
+        if (countNum >= 1) recH1Status.textContent = '⏳ 等待';
+        if (countNum >= 2) recH2Status.textContent = '⏳ 等待';
+        if (countNum >= 3) recH3Status.textContent = '⏳ 等待';
+    }
+
+    recLayerCountSlider.addEventListener('input', function() {
+        updateRecLayerVisibility(this.value);
+    });
+
+    function resetRecLayerStatus() {
+        const count = parseInt(recLayerCountSlider.value);
+        recH1Status.textContent = count >= 1 ? '⏳ 等待' : '';
+        recH1Status.className = 'layer-status';
+        recH2Status.textContent = count >= 2 ? '⏳ 等待' : '';
+        recH2Status.className = 'layer-status';
+        recH3Status.textContent = count >= 3 ? '⏳ 等待' : '';
+        recH3Status.className = 'layer-status';
+        recOutputStatus.textContent = '⏳ 等待';
+        recOutputStatus.className = 'layer-status';
+        recInputLayer.className = 'layer-box';
+        recOutputLayer.className = 'layer-box';
+        recHiddenLayer1.className = 'layer-box hidden-layer show';
+        recHiddenLayer2.className = 'layer-box hidden-layer show';
+        recHiddenLayer3.className = 'layer-box hidden-layer show';
+        updateRecLayerVisibility(recLayerCountSlider.value);
+    }
 
     const testSliders = {
         food: document.getElementById('testFood'),
@@ -820,16 +907,63 @@
     let recWeights = null;
     let isRecTrained = false;
 
+    // 推荐激活层动画
+    function activateRecLayer(layerNum) {
+        const count = parseInt(recLayerCountSlider.value);
+        const layers = [
+            { el: recInputLayer, status: null, label: '✅ 已处理' },
+            { el: recHiddenLayer1, status: recH1Status, label: '✅ 已提取' },
+            { el: recHiddenLayer2, status: recH2Status, label: '✅ 已提取' },
+            { el: recHiddenLayer3, status: recH3Status, label: '✅ 已提取' },
+            { el: recOutputLayer, status: recOutputStatus, label: '✅ 已判断' }
+        ];
+        layers.forEach((l, idx) => {
+            if (idx === 0) {
+                l.el.className = 'layer-box';
+            } else if (idx <= count) {
+                l.el.className = 'layer-box hidden-layer show';
+            } else {
+                l.el.className = 'layer-box hidden-layer';
+            }
+            if (l.status) {
+                l.status.textContent = '⏳ 等待';
+                l.status.className = 'layer-status';
+            }
+        });
+        for (let i = 0; i <= Math.min(layerNum, count + 1); i++) {
+            const l = layers[i];
+            if (i === 0) {
+                l.el.className = 'layer-box done';
+            } else if (i <= count) {
+                l.el.className = 'layer-box hidden-layer show done';
+                if (l.status) {
+                    l.status.textContent = '✅ 已提取';
+                    l.status.className = 'layer-status done';
+                }
+            } else if (i === count + 1) {
+                l.el.className = 'layer-box done';
+                if (l.status) {
+                    l.status.textContent = '✅ 已判断';
+                    l.status.className = 'layer-status done';
+                }
+            }
+        }
+        updateRecLayerVisibility(count);
+    }
+
     recTrainBtn.addEventListener('click', function() {
         recTrainBtn.disabled = true;
         recTrainBtn.textContent = '⏳ 训练中...';
         recTrainLog.innerHTML = '<div class="log-info">🧠 开始训练推荐网络...</div>';
         recWeightDisplayArea.style.display = 'none';
+        resetRecLayerStatus();
+
         const lr = parseInt(recTrainLrSlider.value) / 10;
         const epochs = 5;
         let logLines = [];
         let weights = [0.3, 0.3, 0.2, 0.2];
         let step = 0;
+
         const interval = setInterval(() => {
             if (step >= epochs) {
                 clearInterval(interval);
@@ -842,6 +976,7 @@
                 const wStr = recWeights.map(w => w.toFixed(2)).join(', ');
                 weightValuesRec.textContent = '[' + wStr + ']';
                 recWeightDisplayArea.style.display = 'block';
+                activateRecLayer(parseInt(recLayerCountSlider.value) + 1);
                 recTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会预测用户兴趣</div>`;
                 recTrainLog.innerHTML += `<div class="log-info">💡 权重已固定：美食=${weights[0].toFixed(2)}, 搞笑=${weights[1].toFixed(2)}, 体育=${weights[2].toFixed(2)}, 美妆=${weights[3].toFixed(2)}</div>`;
                 recTrainLog.innerHTML += `<div class="weight-value">📊 最终权重值： [${wStr}]</div>`;
@@ -850,6 +985,8 @@
                 recInferNote.textContent = '✅ 训练完成！可使用训练好的权重进行推荐推理';
                 return;
             }
+            activateRecLayer(step + 1);
+
             let totalLoss = 0;
             for (let user of recTrainData) {
                 const pred = [
@@ -894,13 +1031,14 @@
         recTrainBtn.disabled = false;
         recTrainBtn.textContent = '🚀 开始训练';
         recInferNote.textContent = '💡 请先完成训练，再进行推荐推理';
-        recInferResult.textContent = '💡 点击「推理推荐」查看结果';
+        recInferResult.textContent = '💡 用户调整兴趣滑块后，点击「推理推荐」查看结果';
         recList.innerHTML = `
             <div class="rec-item"><span class="label">🍜 深夜食堂 · 红烧肉</span><span class="score">--%</span></div>
             <div class="rec-item"><span class="label">😂 搞笑喵星人合集</span><span class="score">--%</span></div>
             <div class="rec-item"><span class="label">🏀 NBA 每日集锦</span><span class="score">--%</span></div>
             <div class="rec-item"><span class="label">💄 新手化妆教程</span><span class="score">--%</span></div>
         `;
+        resetRecLayerStatus();
     });
 
     recInferBtn.addEventListener('click', function() {
@@ -945,7 +1083,11 @@
             div.innerHTML = `<span class="label">${item.name}</span><span class="score">${Math.round(item.score*100)}%</span>`;
             recList.appendChild(div);
         });
-        recInferResult.textContent = `📊 预测兴趣：美食 ${interest[0].toFixed(2)}，搞笑 ${interest[1].toFixed(2)}，体育 ${interest[2].toFixed(2)}，美妆 ${interest[3].toFixed(2)}`;
+        recInferResult.textContent = `📊 用户输入兴趣：美食 ${input.food.toFixed(1)}，搞笑 ${input.funny.toFixed(1)}，体育 ${input.sports.toFixed(1)}，美妆 ${input.beauty.toFixed(1)} → 推荐结果如上`;
+        // 激活输出层
+        recOutputStatus.textContent = '✅ 已判断';
+        recOutputStatus.className = 'layer-status done';
+        recOutputLayer.className = 'layer-box done';
     });
 
     recInferResetBtn.addEventListener('click', function() {
@@ -960,13 +1102,16 @@
             <div class="rec-item"><span class="label">🏀 NBA 每日集锦</span><span class="score">--%</span></div>
             <div class="rec-item"><span class="label">💄 新手化妆教程</span><span class="score">--%</span></div>
         `;
-        recInferResult.textContent = '💡 点击「推理推荐」查看结果';
+        recInferResult.textContent = '💡 用户调整兴趣滑块后，点击「推理推荐」查看结果';
+        resetRecLayerStatus();
     });
 
     // 初始化
     updateTrainUI();
     resetLayerStatus();
     updateLayerVisibility(layerCountSlider.value);
+    resetRecLayerStatus();
+    updateRecLayerVisibility(recLayerCountSlider.value);
 })();
 </script>
 </body>
