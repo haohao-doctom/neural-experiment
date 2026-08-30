@@ -73,12 +73,12 @@
         .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
         .footnote i { color: #2b7be4; margin-right: 4px; }
 
-        /* 神经网络结构图 */
+        /* 神经网络结构图 - 独立面板 */
         .network-viz {
             background: #0a1a2f;
             border-radius: 16px;
             padding: 16px 18px;
-            margin-top: 10px;
+            margin-bottom: 12px;
             border: 1px solid #1a3a5f;
         }
         .network-viz .title-row {
@@ -184,6 +184,22 @@
             min-width: 20px;
             text-align: center;
         }
+
+        /* 用户输入兴趣显示 - 放在推荐列表上方 */
+        .user-interest-display {
+            background: #1a2a3f;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin: 8px 0;
+            font-size: 14px;
+            color: #8ab8e6;
+            border-left: 3px solid #2b7be4;
+            display: none;
+        }
+        .user-interest-display .highlight {
+            color: #f7d44a;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -204,7 +220,7 @@
                 <span class="status-tag" id="faceStatusTag">⏳ 未训练</span>
             </div>
 
-            <!-- 训练集 -->
+            <!-- 步骤0：训练集 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                     <i class="fas fa-database" style="color:#1f6ed4;"></i>
@@ -221,7 +237,51 @@
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;" id="trainPreviewThumbs"></div>
             </div>
 
-            <!-- 训练 + 网络结构 -->
+            <!-- 神经网络结构图 -->
+            <div class="network-viz" id="networkViz">
+                <div class="title-row">
+                    <span>🧠 神经网络内部结构</span>
+                    <span style="font-size:11px; color:#5a8aaa;">拖动下方滑块改变隐藏层数</span>
+                </div>
+                <div class="layer-slider-row">
+                    <label>隐藏层数：</label>
+                    <input type="range" min="1" max="3" value="3" id="layerCountSlider">
+                    <span class="layer-count" id="layerCountDisplay">3</span>
+                </div>
+                <div class="layer-row" id="layerRow" style="margin-top:8px;">
+                    <div class="layer-box done" id="inputLayer">
+                        <div class="layer-name">📥 输入层</div>
+                        <div class="layer-sub">(像素)</div>
+                        <div class="layer-status done">✅ 已就绪</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box hidden-layer show" id="hiddenLayer1">
+                        <div class="layer-name">🔍 隐藏层1</div>
+                        <div class="layer-sub">(线条)</div>
+                        <div class="layer-status" id="h1Status">⏳ 等待</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box hidden-layer show" id="hiddenLayer2">
+                        <div class="layer-name">🔍 隐藏层2</div>
+                        <div class="layer-sub">(五官)</div>
+                        <div class="layer-status" id="h2Status">⏳ 等待</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box hidden-layer show" id="hiddenLayer3">
+                        <div class="layer-name">🔍 隐藏层3</div>
+                        <div class="layer-sub">(脸谱)</div>
+                        <div class="layer-status" id="h3Status">⏳ 等待</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box" id="outputLayer">
+                        <div class="layer-name">📤 输出层</div>
+                        <div class="layer-sub">(判断)</div>
+                        <div class="layer-status" id="outputStatus">⏳ 等待</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤1：训练 -->
             <div class="input-area" style="background:#eaf3fe;">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-cogs" style="color:#d48c1a;"></i>
@@ -238,51 +298,6 @@
                         <span style="font-size:12px; color:#8a6a1a; margin-left:4px;">⚠️ 0.6以上易震荡</span>
                     </div>
                 </div>
-
-                <!-- 神经网络结构图 -->
-                <div class="network-viz" id="networkViz">
-                    <div class="title-row">
-                        <span>🧠 神经网络内部结构</span>
-                        <span style="font-size:11px; color:#5a8aaa;">拖动下方滑块改变隐藏层数</span>
-                    </div>
-                    <div class="layer-slider-row">
-                        <label>隐藏层数：</label>
-                        <input type="range" min="1" max="3" value="3" id="layerCountSlider">
-                        <span class="layer-count" id="layerCountDisplay">3</span>
-                    </div>
-                    <div class="layer-row" id="layerRow" style="margin-top:8px;">
-                        <div class="layer-box done" id="inputLayer">
-                            <div class="layer-name">📥 输入层</div>
-                            <div class="layer-sub">(像素)</div>
-                            <div class="layer-status done">✅ 已就绪</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box hidden-layer show" id="hiddenLayer1">
-                            <div class="layer-name">🔍 隐藏层1</div>
-                            <div class="layer-sub">(线条)</div>
-                            <div class="layer-status" id="h1Status">⏳ 等待</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box hidden-layer show" id="hiddenLayer2">
-                            <div class="layer-name">🔍 隐藏层2</div>
-                            <div class="layer-sub">(五官)</div>
-                            <div class="layer-status" id="h2Status">⏳ 等待</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box hidden-layer show" id="hiddenLayer3">
-                            <div class="layer-name">🔍 隐藏层3</div>
-                            <div class="layer-sub">(脸谱)</div>
-                            <div class="layer-status" id="h3Status">⏳ 等待</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box" id="outputLayer">
-                            <div class="layer-name">📤 输出层</div>
-                            <div class="layer-sub">(判断)</div>
-                            <div class="layer-status" id="outputStatus">⏳ 等待</div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="training-log" id="faceTrainLog"><div class="log-info">⏳ 等待训练...</div></div>
                 <div class="weight-bar">
                     <span class="bar-label">权重收敛</span>
@@ -295,7 +310,7 @@
                 </div>
             </div>
 
-            <!-- 推理 -->
+            <!-- 步骤2：推理 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-camera-retro" style="color:#1a8b4c;"></i>
@@ -333,6 +348,7 @@
                 <span class="status-tag" id="recStatusTag">⏳ 未训练</span>
             </div>
 
+            <!-- 步骤0：训练数据 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-database" style="color:#1f6ed4;"></i>
@@ -353,57 +369,57 @@
                 <div style="margin-top:6px; font-size:12px; color:#6a8aaa;">👆 这是AI的“练习题+标准答案”，训练时用来计算误差</div>
             </div>
 
+            <!-- 推荐结构图 -->
+            <div class="network-viz" id="recNetworkViz">
+                <div class="title-row">
+                    <span>🧠 神经网络内部结构</span>
+                    <span style="font-size:11px; color:#5a8aaa;">拖动下方滑块改变隐藏层数</span>
+                </div>
+                <div class="layer-slider-row">
+                    <label>隐藏层数：</label>
+                    <input type="range" min="1" max="3" value="3" id="recLayerCountSlider">
+                    <span class="layer-count" id="recLayerCountDisplay">3</span>
+                </div>
+                <div class="layer-row" id="recLayerRow" style="margin-top:8px;">
+                    <div class="layer-box done" id="recInputLayer">
+                        <div class="layer-name">📥 输入层</div>
+                        <div class="layer-sub">(行为数据)</div>
+                        <div class="layer-status done">✅ 已就绪</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box hidden-layer show" id="recHiddenLayer1">
+                        <div class="layer-name">🔍 隐藏层1</div>
+                        <div class="layer-sub">(统计)</div>
+                        <div class="layer-status" id="recH1Status">⏳ 等待</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box hidden-layer show" id="recHiddenLayer2">
+                        <div class="layer-name">🔍 隐藏层2</div>
+                        <div class="layer-sub">(兴趣画像)</div>
+                        <div class="layer-status" id="recH2Status">⏳ 等待</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box hidden-layer show" id="recHiddenLayer3">
+                        <div class="layer-name">🔍 隐藏层3</div>
+                        <div class="layer-sub">(特征组合)</div>
+                        <div class="layer-status" id="recH3Status">⏳ 等待</div>
+                    </div>
+                    <div class="arrow-symbol">→</div>
+                    <div class="layer-box" id="recOutputLayer">
+                        <div class="layer-name">📤 输出层</div>
+                        <div class="layer-sub">(推荐排序)</div>
+                        <div class="layer-status" id="recOutputStatus">⏳ 等待</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤1：训练 -->
             <div class="input-area" style="background:#eaf3fe;">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-cogs" style="color:#d48c1a;"></i>
                     <span style="font-weight:500; font-size:15px;">步骤1：开始训练</span>
                     <span class="demo-tip">正向+反向传播</span>
                 </div>
-
-                <!-- 推荐部分的神经网络结构图（新增） -->
-                <div class="network-viz" id="recNetworkViz">
-                    <div class="title-row">
-                        <span>🧠 神经网络内部结构</span>
-                        <span style="font-size:11px; color:#5a8aaa;">拖动下方滑块改变隐藏层数</span>
-                    </div>
-                    <div class="layer-slider-row">
-                        <label>隐藏层数：</label>
-                        <input type="range" min="1" max="3" value="3" id="recLayerCountSlider">
-                        <span class="layer-count" id="recLayerCountDisplay">3</span>
-                    </div>
-                    <div class="layer-row" id="recLayerRow" style="margin-top:8px;">
-                        <div class="layer-box done" id="recInputLayer">
-                            <div class="layer-name">📥 输入层</div>
-                            <div class="layer-sub">(行为数据)</div>
-                            <div class="layer-status done">✅ 已就绪</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box hidden-layer show" id="recHiddenLayer1">
-                            <div class="layer-name">🔍 隐藏层1</div>
-                            <div class="layer-sub">(统计)</div>
-                            <div class="layer-status" id="recH1Status">⏳ 等待</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box hidden-layer show" id="recHiddenLayer2">
-                            <div class="layer-name">🔍 隐藏层2</div>
-                            <div class="layer-sub">(兴趣画像)</div>
-                            <div class="layer-status" id="recH2Status">⏳ 等待</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box hidden-layer show" id="recHiddenLayer3">
-                            <div class="layer-name">🔍 隐藏层3</div>
-                            <div class="layer-sub">(特征组合)</div>
-                            <div class="layer-status" id="recH3Status">⏳ 等待</div>
-                        </div>
-                        <div class="arrow-symbol">→</div>
-                        <div class="layer-box" id="recOutputLayer">
-                            <div class="layer-name">📤 输出层</div>
-                            <div class="layer-sub">(推荐排序)</div>
-                            <div class="layer-status" id="recOutputStatus">⏳ 等待</div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="input-row">
                     <button class="btn btn-warning" id="recTrainBtn"><i class="fas fa-play"></i> 🚀 开始训练</button>
                     <button class="btn btn-outline" id="recResetTrainBtn"><i class="fas fa-undo-alt"></i> 重置训练</button>
@@ -427,6 +443,7 @@
                 </div>
             </div>
 
+            <!-- 步骤2：推理 - 用户输入兴趣显示在推荐列表上方 -->
             <div class="input-area">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <i class="fas fa-sliders-h" style="color:#1a8b4c;"></i>
@@ -444,6 +461,13 @@
                     <button class="btn btn-outline" id="recInferResetBtn"><i class="fas fa-undo-alt"></i> 重置</button>
                     <span style="font-size:12px; color:#4d6f91; margin-left:12px;" id="recInferNote">💡 使用训练好的权重预测兴趣</span>
                 </div>
+
+                <!-- ★★★ 用户输入兴趣显示 - 放在推荐列表正上方 ★★★ -->
+                <div class="user-interest-display" id="userInterestDisplay">
+                    📊 <span class="highlight">用户输入兴趣：</span>
+                    <span id="userInterestText">美食 0.5，搞笑 0.5，体育 0.2，美妆 0.3</span>
+                </div>
+
                 <div class="rec-list" id="recList">
                     <div class="rec-item"><span class="label">🍜 深夜食堂 · 红烧肉</span><span class="score">--%</span></div>
                     <div class="rec-item"><span class="label">😂 搞笑喵星人合集</span><span class="score">--%</span></div>
@@ -494,7 +518,6 @@
     const trainLrSlider = document.getElementById('trainLrSlider');
     const trainLrVal = document.getElementById('trainLrVal');
 
-    // 人脸结构图元素
     const layerCountSlider = document.getElementById('layerCountSlider');
     const layerCountDisplay = document.getElementById('layerCountDisplay');
     const hiddenLayer1 = document.getElementById('hiddenLayer1');
@@ -511,14 +534,12 @@
     let trainedWeights = null;
     let isFaceTrained = false;
 
-    // 层数滑块控制（人脸）
     function updateLayerVisibility(count) {
         const countNum = parseInt(count);
         layerCountDisplay.textContent = countNum;
         hiddenLayer1.classList.toggle('show', countNum >= 1);
         hiddenLayer2.classList.toggle('show', countNum >= 2);
         hiddenLayer3.classList.toggle('show', countNum >= 3);
-        // 重置状态文字
         if (countNum >= 1) h1Status.textContent = '⏳ 等待';
         if (countNum >= 2) h2Status.textContent = '⏳ 等待';
         if (countNum >= 3) h3Status.textContent = '⏳ 等待';
@@ -528,7 +549,6 @@
         updateLayerVisibility(this.value);
     });
 
-    // 重置所有层状态（人脸）
     function resetLayerStatus() {
         const count = parseInt(layerCountSlider.value);
         h1Status.textContent = count >= 1 ? '⏳ 等待' : '';
@@ -626,7 +646,6 @@
         trainPreviewSample.innerHTML += `<div style="font-size:11px; color:#4d6f91;">${sample.label}</div>`;
     }
 
-    // 训练（人脸）
     faceTrainBtn.addEventListener('click', function() {
         if (trainData.length < 2) {
             alert('至少需要2张训练照片！');
@@ -650,7 +669,6 @@
         let weights = Array.from({length: trainData.length}, () => Math.random() * 0.5 + 0.25);
         let step = 0;
 
-        // 激活层动画（人脸）
         function activateLayer(layerNum) {
             const layers = [
                 { el: inputLayer, status: null, label: '✅ 已处理' },
@@ -813,7 +831,7 @@
     });
 
     // ============================================================
-    // 短视频推荐模块（新增隐藏层数控制）
+    // 短视频推荐模块
     // ============================================================
     const recTrainBtn = document.getElementById('recTrainBtn');
     const recResetTrainBtn = document.getElementById('recResetTrainBtn');
@@ -831,7 +849,10 @@
     const recTrainLrSlider = document.getElementById('recTrainLrSlider');
     const recTrainLrVal = document.getElementById('recTrainLrVal');
 
-    // 推荐结构图元素
+    // 用户输入兴趣显示元素
+    const userInterestDisplay = document.getElementById('userInterestDisplay');
+    const userInterestText = document.getElementById('userInterestText');
+
     const recLayerCountSlider = document.getElementById('recLayerCountSlider');
     const recLayerCountDisplay = document.getElementById('recLayerCountDisplay');
     const recHiddenLayer1 = document.getElementById('recHiddenLayer1');
@@ -844,7 +865,6 @@
     const recInputLayer = document.getElementById('recInputLayer');
     const recOutputLayer = document.getElementById('recOutputLayer');
 
-    // 推荐层数控制
     function updateRecLayerVisibility(count) {
         const countNum = parseInt(count);
         recLayerCountDisplay.textContent = countNum;
@@ -893,8 +913,19 @@
     Object.keys(testSliders).forEach(key => {
         testSliders[key].addEventListener('input', function() {
             testValSpans[key].textContent = (parseInt(this.value)/10).toFixed(1);
+            // 实时更新用户输入显示（推理前预览）
+            updateUserInterestDisplay();
         });
     });
+
+    function updateUserInterestDisplay() {
+        const food = parseFloat(testSliders.food.value) / 10;
+        const funny = parseFloat(testSliders.funny.value) / 10;
+        const sports = parseFloat(testSliders.sports.value) / 10;
+        const beauty = parseFloat(testSliders.beauty.value) / 10;
+        userInterestText.textContent = `美食 ${food.toFixed(1)}，搞笑 ${funny.toFixed(1)}，体育 ${sports.toFixed(1)}，美妆 ${beauty.toFixed(1)}`;
+    }
+
     recTrainLrSlider.addEventListener('input', function() {
         recTrainLrVal.textContent = (parseInt(this.value)/10).toFixed(1);
     });
@@ -907,7 +938,6 @@
     let recWeights = null;
     let isRecTrained = false;
 
-    // 推荐激活层动画
     function activateRecLayer(layerNum) {
         const count = parseInt(recLayerCountSlider.value);
         const layers = [
@@ -1039,6 +1069,7 @@
             <div class="rec-item"><span class="label">💄 新手化妆教程</span><span class="score">--%</span></div>
         `;
         resetRecLayerStatus();
+        userInterestDisplay.style.display = 'none';
     });
 
     recInferBtn.addEventListener('click', function() {
@@ -1083,8 +1114,12 @@
             div.innerHTML = `<span class="label">${item.name}</span><span class="score">${Math.round(item.score*100)}%</span>`;
             recList.appendChild(div);
         });
-        recInferResult.textContent = `📊 用户输入兴趣：美食 ${input.food.toFixed(1)}，搞笑 ${input.funny.toFixed(1)}，体育 ${input.sports.toFixed(1)}，美妆 ${input.beauty.toFixed(1)} → 推荐结果如上`;
-        // 激活输出层
+
+        // 显示用户输入兴趣（放在推荐列表上方）
+        userInterestDisplay.style.display = 'block';
+        updateUserInterestDisplay();
+
+        recInferResult.textContent = `✅ 推荐完成！`;
         recOutputStatus.textContent = '✅ 已判断';
         recOutputStatus.className = 'layer-status done';
         recOutputLayer.className = 'layer-box done';
@@ -1104,6 +1139,7 @@
         `;
         recInferResult.textContent = '💡 用户调整兴趣滑块后，点击「推理推荐」查看结果';
         resetRecLayerStatus();
+        userInterestDisplay.style.display = 'none';
     });
 
     // 初始化
@@ -1112,6 +1148,8 @@
     updateLayerVisibility(layerCountSlider.value);
     resetRecLayerStatus();
     updateRecLayerVisibility(recLayerCountSlider.value);
+    // 初始隐藏用户输入显示
+    userInterestDisplay.style.display = 'none';
 })();
 </script>
 </body>
