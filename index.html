@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神经网络实验平台 · 训练与推理</title>
+    <title>神经网络实验平台 · 双塔推荐</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -14,7 +14,7 @@
         .header h1 i { color: #2b7be4; font-size: 28px; }
         .header .badge { background: #d4e2fc; color: #1a4c8a; padding: 8px 18px; border-radius: 60px; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
         .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 8px; }
-        @media (max-width: 980px) { .demo-grid { grid-template-columns: 1fr; gap: 32px; } }
+        @media (max-width: 1100px) { .demo-grid { grid-template-columns: 1fr; gap: 32px; } }
         .case-panel { background: #ffffff; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,0.04); border: 1px solid #e9f0f7; padding: 24px 22px 28px; }
         .panel-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; color: #0b2b4a; margin-bottom: 16px; border-bottom: 1px dashed #dce6f0; padding-bottom: 12px; }
         .panel-title i { font-size: 22px; color: #2b7be4; width: 32px; }
@@ -73,7 +73,6 @@
         .footnote { text-align: center; margin-top: 28px; color: #5b7999; font-size: 14px; border-top: 1px solid #e2ecf7; padding-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; }
         .footnote i { color: #2b7be4; margin-right: 4px; }
 
-        /* 神经网络结构图 */
         .network-viz {
             background: #0a1a2f;
             border-radius: 16px;
@@ -183,7 +182,6 @@
             display: block;
         }
 
-        /* 用户选择按钮组 */
         .user-btn-group {
             display: flex;
             gap: 8px;
@@ -200,14 +198,8 @@
             color: #1a3a5c;
             transition: 0.15s;
         }
-        .user-btn-group .user-btn:hover {
-            background: #edf4fe;
-        }
-        .user-btn-group .user-btn.active {
-            border-color: #1a5fb0;
-            background: #1a5fb0;
-            color: white;
-        }
+        .user-btn-group .user-btn:hover { background: #edf4fe; }
+        .user-btn-group .user-btn.active { border-color: #1a5fb0; background: #1a5fb0; color: white; }
 
         .behavior-history {
             background: white;
@@ -217,86 +209,131 @@
             border: 1px solid #e2ecf5;
             font-size: 14px;
         }
-        .behavior-history .item {
-            padding: 4px 0;
-            border-bottom: 1px solid #f0f4fa;
-        }
+        .behavior-history .item { padding: 4px 0; border-bottom: 1px solid #f0f4fa; }
         .behavior-history .item:last-child { border: none; }
-        .behavior-history .like { color: #1a8b4c; }
-        .behavior-history .dislike { color: #b02a1a; }
+        .history-tag { display: inline-block; padding: 0 10px; border-radius: 12px; font-size: 11px; font-weight: 500; margin-left: 6px; }
+        .history-tag.watch { background: #d4e2fc; color: #1a4c8a; }
+        .history-tag.like { background: #a8e6b0; color: #1a6a3a; }
+        .history-tag.dislike { background: #f5c6c6; color: #b02a1a; }
 
-        .interest-result {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 8px;
+        .tower-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 6px;
         }
-        .interest-result .tag {
-            padding: 4px 16px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 500;
-            background: #1a3a5f;
-            color: #8ab8e6;
+        @media (max-width: 600px) { .tower-container { grid-template-columns: 1fr; } }
+        .tower-box {
+            background: #142a44;
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid #1a3a5f;
         }
-        .interest-result .tag.high {
-            background: #f7d44a;
-            color: #0a1a2f;
-        }
-        .interest-result .tag .val {
-            color: #f7d44a;
+        .tower-box .tower-title {
+            font-size: 13px;
             font-weight: 600;
+            margin-bottom: 6px;
         }
-        .interest-result .tag.high .val {
-            color: #0a1a2f;
+        .tower-box .tower-title .user-color { color: #7ddf9a; }
+        .tower-box .tower-title .item-color { color: #f7d44a; }
+        .tower-box .tower-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #b0d4f0;
+            padding: 3px 0;
+            flex-wrap: wrap;
+        }
+        .tower-box .tower-row .arrow { color: #5a8aaa; }
+        .tower-box .tower-row .highlight { color: #f7d44a; font-weight: 600; }
+        .tower-box .tower-row .highlight-green { color: #7ddf9a; font-weight: 600; }
+        .tower-box .vector-display {
+            background: #0a1a2f;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #f7d44a;
+            margin-top: 4px;
+            text-align: center;
         }
 
-        .scoring-list {
+        .scoring-list-v2 {
             display: flex;
             flex-direction: column;
             gap: 4px;
             margin-top: 8px;
         }
-        .scoring-item {
+        .scoring-item-v2 {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 6px 12px;
-            background: white;
+            background: #142a44;
             border-radius: 10px;
-            border: 1px solid #e2ecf5;
-        }
-        .scoring-item .rank {
-            font-weight: 600;
-            color: #1a5fb0;
-            min-width: 24px;
-        }
-        .scoring-item .title {
-            flex: 1;
-            margin-left: 8px;
-            font-size: 14px;
-        }
-        .scoring-item .score {
-            font-weight: 600;
-            font-size: 14px;
-            color: #00337a;
-        }
-        .scoring-item .score.high {
-            color: #1a8b4c;
-        }
-        .scoring-item.top {
-            background: #eaf3fe;
-            border-color: #1a5fb0;
-        }
-        .ctrl-hint {
-            font-size: 11px;
-            color: #5a8aaa;
-            margin-left: 6px;
-        }
-        .rec-infer-note {
+            border: 1px solid #1a3a5f;
             font-size: 13px;
-            color: #4d6f91;
-            margin-top: 6px;
+        }
+        .scoring-item-v2 .rank { font-weight: 600; color: #6a9ac0; min-width: 24px; }
+        .scoring-item-v2 .title { flex: 1; margin-left: 8px; color: #b0d4f0; }
+        .scoring-item-v2 .score { font-weight: 600; color: #8ab8e6; }
+        .scoring-item-v2 .score.high { color: #7ddf9a; }
+        .scoring-item-v2.top { background: #1a4a3a; border-color: #7ddf9a; }
+        .highlight-box {
+            background: #0a1a2f;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 8px;
+        }
+        .highlight-box .hl-title { color: #8ab8e6; font-size: 13px; margin-bottom: 4px; }
+        .highlight-box .hl-content { color: #b0d4f0; font-size: 14px; }
+        .highlight-box .hl-content .em { color: #f7d44a; font-weight: 600; }
+
+        .section-title {
+            font-weight: 500;
+            font-size: 15px;
+            color: #0b2b4a;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { color: #2b7be4; }
+        .candidate-badge {
+            display: inline-block;
+            background: #d48c1a;
+            color: white;
+            border-radius: 30px;
+            padding: 0 14px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .similarity-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+        .similarity-row .bar-small {
+            flex: 1;
+            height: 6px;
+            background: #1a3a5f;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .similarity-row .bar-small .fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        .similarity-row .sim-num {
+            min-width: 44px;
+            text-align: right;
+            font-weight: 600;
+            color: #f7d44a;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -318,7 +355,6 @@
                 <span class="status-tag" id="faceStatusTag">⏳ 未训练</span>
             </div>
 
-            <!-- 训练集 -->
             <div class="input-area">
                 <div class="section-title"><i class="fas fa-database"></i> 步骤0：准备训练数据集</div>
                 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
@@ -331,7 +367,6 @@
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;" id="trainPreviewThumbs"></div>
             </div>
 
-            <!-- 神经网络结构 -->
             <div class="network-viz" id="networkViz">
                 <div class="viz-title">🧠 神经网络内部结构</div>
                 <div class="control-area">
@@ -377,7 +412,6 @@
                 </div>
             </div>
 
-            <!-- 训练 -->
             <div class="input-area" style="background:#eaf3fe;">
                 <div class="section-title"><i class="fas fa-cogs" style="color:#d48c1a;"></i> 步骤1：开始训练</div>
                 <div class="input-row">
@@ -402,7 +436,6 @@
                 </div>
             </div>
 
-            <!-- 推理 -->
             <div class="input-area">
                 <div class="section-title"><i class="fas fa-camera-retro" style="color:#1a8b4c;"></i> 步骤2：推理（签到比对）</div>
                 <div class="input-row">
@@ -428,43 +461,63 @@
             </div>
         </div>
 
-        <!-- ===== 短视频推荐（新版本 · 符合老师原理） ===== -->
+        <!-- ===== 短视频推荐（双塔模型） ===== -->
         <div class="case-panel">
             <div class="panel-title">
                 <i class="fas fa-thumbs-up"></i> 短视频个性化推荐
-                <small>行为 → 兴趣 → 排序</small>
-                <span class="status-tag" id="recStatusTag">⏳ 未训练</span>
+                <small>双塔模型 · 用户塔 + 视频塔</small>
+                <span class="status-tag" id="recStatusTag">⏳ 未开始</span>
             </div>
 
-            <!-- 步骤0：用户特征 -->
+            <!-- 步骤0：用户特征 + 历史序列 -->
             <div class="input-area">
-                <div class="section-title"><i class="fas fa-user"></i> 步骤0：当前用户特征</div>
+                <div class="section-title"><i class="fas fa-user"></i> 步骤0：用户特征 + 历史观看序列</div>
                 <div class="user-btn-group" id="userBtnGroup">
-                    <button class="user-btn active" data-user="A">👤 用户A</button>
-                    <button class="user-btn" data-user="B">👤 用户B</button>
-                    <button class="user-btn" data-user="C">👤 用户C</button>
+                    <button class="user-btn active" data-user="A">👤 张三</button>
+                    <button class="user-btn" data-user="B">👤 李四</button>
+                    <button class="user-btn" data-user="C">👤 王五</button>
                 </div>
                 <div class="behavior-history" id="behaviorDisplay">
-                    <div style="font-weight:600; margin-bottom:4px;">📊 用户画像</div>
-                    <div id="userInfoText">用户A · 22岁 · iPhone · 夜间活跃</div>
-                    <div style="margin-top:6px; font-size:13px; color:#4d6f91;">📜 最近观看记录：</div>
+                    <div style="font-weight:600; margin-bottom:4px;">📊 用户属性</div>
+                    <div id="userInfoText">张三 · 22岁 · iPhone · 夜间活跃</div>
+                    <div style="margin-top:8px; font-weight:600; font-size:13px; color:#4d6f91;">📜 历史观看序列（4条）：</div>
                     <div id="historyList"></div>
                 </div>
             </div>
 
-            <!-- 步骤1：神经网络提取兴趣 -->
+            <!-- 步骤1：双塔模型 -->
             <div class="input-area" style="background:#eaf3fe;">
-                <div class="section-title"><i class="fas fa-brain" style="color:#d48c1a;"></i> 步骤1：神经网络提取兴趣</div>
+                <div class="section-title"><i class="fas fa-code-branch" style="color:#d48c1a;"></i> 步骤1：双塔模型前向传播</div>
                 <div style="font-size:13px; color:#4d6f91; margin-bottom:6px;">
-                    💡 从用户行为中自动学习兴趣向量（Embedding + DNN）
+                    🧑 用户塔 + 🎬 视频塔 = 两路独立的DNN网络，各自输出向量，最后算相似度
                 </div>
-                <button class="btn btn-warning" id="extractInterestBtn"><i class="fas fa-magic"></i> 🔍 提取兴趣向量</button>
-                <button class="btn btn-outline" id="resetInterestBtn"><i class="fas fa-undo-alt"></i> 重置</button>
-                <div id="interestDisplay" style="margin-top:8px; display:none;">
-                    <div style="font-size:13px; color:#8ab8e6; background:#0a1a2f; border-radius:12px; padding:12px 16px;">
-                        <div style="color:#8ab8e6; margin-bottom:4px;">🧠 神经网络输出兴趣向量：</div>
-                        <div class="interest-result" id="interestResult"></div>
-                        <div style="font-size:12px; color:#5a8aaa; margin-top:6px;" id="interestNote"></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn btn-warning" id="forwardBtn"><i class="fas fa-play"></i> 🚀 执行双塔前向传播</button>
+                    <button class="btn btn-outline" id="resetForwardBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+                </div>
+                <div id="towerDisplay" style="display:none; margin-top:8px;">
+                    <div class="highlight-box">
+                        <div class="hl-title">🧠 双塔网络结构（用户塔 + 视频塔）</div>
+                        <div class="tower-container">
+                            <!-- 用户塔 -->
+                            <div class="tower-box">
+                                <div class="tower-title"><span class="user-color">🧑 用户塔</span></div>
+                                <div class="tower-row">用户特征 → Embedding → DNN</div>
+                                <div class="tower-row"><span class="arrow">▶</span> 输出用户向量 <span id="userVectorDisplay" style="color:#7ddf9a;font-weight:600;">[0.72, 0.15, 0.08, 0.05]</span></div>
+                                <div style="font-size:11px; color:#5a8aaa; margin-top:4px;">👆 用户塔从用户属性和历史中学习兴趣</div>
+                            </div>
+                            <!-- 视频塔 -->
+                            <div class="tower-box">
+                                <div class="tower-title"><span class="item-color">🎬 视频塔</span></div>
+                                <div class="tower-row">视频特征 → Embedding → DNN</div>
+                                <div class="tower-row"><span class="arrow">▶</span> 输出视频向量 <span id="itemVectorDisplay" style="color:#f7d44a;font-weight:600;">[0.85, 0.05, 0.05, 0.05]</span></div>
+                                <div style="font-size:11px; color:#5a8aaa; margin-top:4px;">👆 视频塔从视频标签、完播率等特征中学习</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #1a3a5f; font-size:13px; color:#b0d4f0;">
+                            📊 相似度 = 用户向量 · 视频向量 = <span id="similarityDisplay" style="color:#f7d44a;font-weight:600;">0.89</span>
+                            <span id="similarityLabel" style="color:#7ddf9a;margin-left:8px;">✅ 高度相关</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -473,15 +526,17 @@
             <div class="input-area">
                 <div class="section-title"><i class="fas fa-list-ol" style="color:#1a8b4c;"></i> 步骤2：逐条打分 → 推荐排序</div>
                 <div style="font-size:13px; color:#4d6f91; margin-bottom:6px;">
-                    💡 神经网络对每条候选视频独立计算分数（用户特征 + 视频特征 → 点击概率）
+                    💡 每条候选视频独立过视频塔，与用户向量算相似度，排序输出
                 </div>
-                <button class="btn btn-success" id="rankBtn"><i class="fas fa-play"></i> 🚀 开始推荐</button>
-                <button class="btn btn-outline" id="resetRankBtn"><i class="fas fa-undo-alt"></i> 重置</button>
-                <div id="rankingDisplay" style="margin-top:8px; display:none;">
-                    <div style="font-size:13px; color:#8ab8e6; background:#0a1a2f; border-radius:12px; padding:12px 16px;">
-                        <div style="color:#8ab8e6; margin-bottom:4px;">🎯 神经网络逐条打分结果：</div>
-                        <div class="scoring-list" id="scoringList"></div>
-                        <div style="font-size:12px; color:#5a8aaa; margin-top:6px;" id="rankNote"></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn btn-success" id="rankBtn"><i class="fas fa-play"></i> 🚀 开始推荐排序</button>
+                    <button class="btn btn-outline" id="resetRankBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+                </div>
+                <div id="rankingDisplay" style="display:none; margin-top:8px;">
+                    <div class="highlight-box">
+                        <div class="hl-title">🎯 每条视频独立过视频塔，算相似度：</div>
+                        <div id="scoringListV2" class="scoring-list-v2"></div>
+                        <div style="font-size:12px; color:#5a8aaa; margin-top:6px;" id="rankNoteV2"></div>
                     </div>
                 </div>
             </div>
@@ -492,14 +547,14 @@
         <span><i class="fas fa-cube"></i> 训练 → 推理 → 可视化</span>
         <span><i class="fas fa-arrow-right"></i> 正向传播 · 误差计算 · 反向传播</span>
         <span><i class="fas fa-weight-hanging"></i> 权重随训练更新，推理不修改</span>
-        <span><i class="fas fa-code"></i> 行为 → Embedding → DNN → 兴趣 → 排序</span>
+        <span><i class="fas fa-code"></i> 用户塔 + 视频塔 = 双塔模型</span>
     </div>
 </div>
 
 <script>
 (function() {
     // ============================================================
-    // 人脸识别模块（与原代码一致）
+    // 人脸识别模块（完整保留）
     // ============================================================
     const addTrainBtn = document.getElementById('addTrainBtn');
     const clearTrainBtn = document.getElementById('clearTrainBtn');
@@ -841,100 +896,91 @@
     });
 
     // ============================================================
-    // 短视频推荐模块（新版本 · 符合老师原理）
+    // 短视频推荐模块（双塔模型）
     // ============================================================
-    // 虚拟用户数据
     const userData = {
         A: {
-            name: '用户A',
+            name: '张三',
             age: '22岁',
             device: 'iPhone',
             active: '夜间活跃',
             history: [
-                { title: '美食教程 · 红烧肉', action: '✅ 完播', tag: 'food' },
-                { title: '体育集锦 · NBA', action: '❌ 划走', tag: 'sports' },
-                { title: '美食探店 · 火锅', action: '👍 点赞', tag: 'food' },
-                { title: '搞笑短片 · 喵星人', action: '✅ 完播', tag: 'funny' },
-            ],
-            // 行为统计 → 真实兴趣
-            behavior: { food: 3, funny: 1, sports: 2, beauty: 0 },
-            trueInterest: { food: 0.8, funny: 0.1, sports: 0.1, beauty: 0.0 }
+                { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food', action: '✅ 完播' },
+                { id: 'V2', title: '🏀 NBA集锦 · 十佳球', tag: 'sports', action: '❌ 划走' },
+                { id: 'V3', title: '🍜 美食探店 · 火锅', tag: 'food', action: '👍 点赞' },
+                { id: 'V4', title: '😂 搞笑喵星人合集', tag: 'funny', action: '✅ 完播' },
+            ]
         },
         B: {
-            name: '用户B',
+            name: '李四',
             age: '19岁',
             device: 'Android',
             active: '白天活跃',
             history: [
-                { title: '搞笑合集 · 动物配音', action: '👍 点赞', tag: 'funny' },
-                { title: '美妆教程 · 新手化妆', action: '❌ 划走', tag: 'beauty' },
-                { title: '搞笑短片 · 喵星人', action: '✅ 完播', tag: 'funny' },
-                { title: '美食教程 · 红烧肉', action: '❌ 划走', tag: 'food' },
-                { title: '搞笑集锦 · 爆笑', action: '👍 点赞', tag: 'funny' },
-            ],
-            behavior: { food: 1, funny: 3, sports: 0, beauty: 1 },
-            trueInterest: { food: 0.1, funny: 0.7, sports: 0.1, beauty: 0.1 }
+                { id: 'V1', title: '😂 搞笑动物配音', tag: 'funny', action: '👍 点赞' },
+                { id: 'V2', title: '💄 新手化妆教程', tag: 'beauty', action: '❌ 划走' },
+                { id: 'V3', title: '😂 搞笑喵星人合集', tag: 'funny', action: '✅ 完播' },
+                { id: 'V4', title: '🍜 美食教程 · 红烧肉', tag: 'food', action: '❌ 划走' },
+            ]
         },
         C: {
-            name: '用户C',
+            name: '王五',
             age: '25岁',
             device: 'iPad',
             active: '周末活跃',
             history: [
-                { title: '编程教学 · Python', action: '✅ 完播', tag: 'food' },
-                { title: '编程教学 · 神经网络', action: '👍 点赞', tag: 'food' },
-                { title: '美食探店 · 火锅', action: '✅ 完播', tag: 'food' },
-                { title: '体育集锦 · NBA', action: '❌ 划走', tag: 'sports' },
-                { title: '编程教学 · 数据结构', action: '✅ 完播', tag: 'food' },
-            ],
-            behavior: { food: 4, funny: 0, sports: 1, beauty: 0 },
-            trueInterest: { food: 0.9, funny: 0.05, sports: 0.05, beauty: 0.0 }
+                { id: 'V1', title: '💻 Python编程入门', tag: 'food', action: '✅ 完播' },
+                { id: 'V2', title: '🧠 神经网络讲解', tag: 'food', action: '👍 点赞' },
+                { id: 'V3', title: '🍜 美食探店 · 火锅', tag: 'food', action: '✅ 完播' },
+                { id: 'V4', title: '🏀 NBA集锦 · 十佳球', tag: 'sports', action: '❌ 划走' },
+            ]
         }
     };
 
-    // 候选视频库（每个视频带有标签向量）
-    const videoDB = [
-        { id: 1, title: '🍜 深夜食堂 · 红烧肉', tag: 'food', emoji: '🍜' },
-        { id: 2, title: '🍣 日料大师 · 刺身', tag: 'food', emoji: '🍣' },
-        { id: 3, title: '😂 搞笑喵星人合集', tag: 'funny', emoji: '😂' },
-        { id: 4, title: '🤣 爆笑动物配音', tag: 'funny', emoji: '🤣' },
-        { id: 5, title: '🏀 NBA 每日集锦', tag: 'sports', emoji: '🏀' },
-        { id: 6, title: '💄 新手化妆教程', tag: 'beauty', emoji: '💄' },
+    const candidateVideos = [
+        { id: 'V5', title: '🍣 日料大师 · 刺身', tag: 'food' },
+        { id: 'V6', title: '🤣 爆笑动物配音', tag: 'funny' },
+        { id: 'V7', title: '🏀 NBA每日集锦', tag: 'sports' },
+        { id: 'V8', title: '💄 新手化妆教程', tag: 'beauty' },
+        { id: 'V9', title: '🍜 深夜食堂 · 红烧肉', tag: 'food' },
+        { id: 'V10', title: '😂 搞笑喵星人合集', tag: 'funny' },
     ];
 
     let currentUser = 'A';
-    let extractedInterest = null;
-    let rankedResults = null;
+    let currentUserVector = null;
+    let currentItemVectors = null;
+    let rankedResultsV2 = null;
 
     const recStatusTag = document.getElementById('recStatusTag');
     const userBtns = document.querySelectorAll('.user-btn');
     const behaviorDisplay = document.getElementById('behaviorDisplay');
     const userInfoText = document.getElementById('userInfoText');
     const historyList = document.getElementById('historyList');
-    const extractBtn = document.getElementById('extractInterestBtn');
-    const resetInterestBtn = document.getElementById('resetInterestBtn');
-    const interestDisplay = document.getElementById('interestDisplay');
-    const interestResult = document.getElementById('interestResult');
-    const interestNote = document.getElementById('interestNote');
+    const forwardBtn = document.getElementById('forwardBtn');
+    const resetForwardBtn = document.getElementById('resetForwardBtn');
+    const towerDisplay = document.getElementById('towerDisplay');
+    const userVectorDisplay = document.getElementById('userVectorDisplay');
+    const itemVectorDisplay = document.getElementById('itemVectorDisplay');
+    const similarityDisplay = document.getElementById('similarityDisplay');
+    const similarityLabel = document.getElementById('similarityLabel');
     const rankBtn = document.getElementById('rankBtn');
     const resetRankBtn = document.getElementById('resetRankBtn');
     const rankingDisplay = document.getElementById('rankingDisplay');
-    const scoringList = document.getElementById('scoringList');
-    const rankNote = document.getElementById('rankNote');
+    const scoringListV2 = document.getElementById('scoringListV2');
+    const rankNoteV2 = document.getElementById('rankNoteV2');
 
-    // 切换用户
     userBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             userBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentUser = this.dataset.user;
             updateUserDisplay();
-            // 重置推荐状态
-            extractedInterest = null;
-            rankedResults = null;
-            interestDisplay.style.display = 'none';
+            currentUserVector = null;
+            currentItemVectors = null;
+            rankedResultsV2 = null;
+            towerDisplay.style.display = 'none';
             rankingDisplay.style.display = 'none';
-            recStatusTag.textContent = '⏳ 未训练';
+            recStatusTag.textContent = '⏳ 未开始';
             recStatusTag.className = 'status-tag';
         });
     });
@@ -942,105 +988,105 @@
     function updateUserDisplay() {
         const user = userData[currentUser];
         userInfoText.textContent = `${user.name} · ${user.age} · ${user.device} · ${user.active}`;
-        historyList.innerHTML = user.history.map(h => 
-            `<div class="item">${h.action} ${h.title}</div>`
-        ).join('');
-        // 清空之前的兴趣和排序结果
-        interestDisplay.style.display = 'none';
-        rankingDisplay.style.display = 'none';
-        extractedInterest = null;
-        rankedResults = null;
-        recStatusTag.textContent = '⏳ 未训练';
-        recStatusTag.className = 'status-tag';
+        historyList.innerHTML = user.history.map(h => {
+            let cls = 'watch';
+            if (h.action.includes('点赞')) cls = 'like';
+            else if (h.action.includes('划走')) cls = 'dislike';
+            return `<div class="item">${h.id}: ${h.title} <span class="history-tag ${cls}">${h.action}</span></div>`;
+        }).join('');
     }
 
-    // 提取兴趣向量
-    extractBtn.addEventListener('click', function() {
+    // 双塔前向传播
+    forwardBtn.addEventListener('click', function() {
         const user = userData[currentUser];
-        // 模拟神经网络计算：行为 → Embedding → DNN → 兴趣向量
-        const behavior = user.behavior;
-        const total = behavior.food + behavior.funny + behavior.sports + behavior.beauty || 1;
-        const raw = {
-            food: behavior.food / total * 0.9 + 0.05,
-            funny: behavior.funny / total * 0.9 + 0.05,
-            sports: behavior.sports / total * 0.9 + 0.05,
-            beauty: behavior.beauty / total * 0.9 + 0.05
+        // 1. 用户塔：从历史行为中提取兴趣向量
+        const tagCounts = { food: 0, funny: 0, sports: 0, beauty: 0 };
+        const tagActions = { food: 0, funny: 0, sports: 0, beauty: 0 };
+        user.history.forEach(h => {
+            tagCounts[h.tag] = (tagCounts[h.tag] || 0) + 1;
+            if (h.action.includes('点赞') || h.action.includes('完播')) {
+                tagActions[h.tag] = (tagActions[h.tag] || 0) + 1;
+            }
+        });
+        // 用户向量（基于行为和反馈）
+        const total = Object.values(tagCounts).reduce((a,b) => a+b, 0) || 1;
+        const userVec = {
+            food: (tagCounts.food / total) * 0.8 + (tagActions.food / total) * 0.2 + 0.05,
+            funny: (tagCounts.funny / total) * 0.8 + (tagActions.funny / total) * 0.2 + 0.05,
+            sports: (tagCounts.sports / total) * 0.8 + (tagActions.sports / total) * 0.2 + 0.05,
+            beauty: (tagCounts.beauty / total) * 0.8 + (tagActions.beauty / total) * 0.2 + 0.05
         };
-        // 归一化
-        const sum = raw.food + raw.funny + raw.sports + raw.beauty;
-        extractedInterest = {
-            food: raw.food / sum,
-            funny: raw.funny / sum,
-            sports: raw.sports / sum,
-            beauty: raw.beauty / sum
-        };
+        const sum = Object.values(userVec).reduce((a,b) => a+b, 0);
+        Object.keys(userVec).forEach(k => userVec[k] /= sum);
+        currentUserVector = userVec;
 
-        // 显示结果
-        interestDisplay.style.display = 'block';
-        const tags = [
-            { key: 'food', label: '🍜 美食', val: extractedInterest.food },
-            { key: 'funny', label: '😂 搞笑', val: extractedInterest.funny },
-            { key: 'sports', label: '🏀 体育', val: extractedInterest.sports },
-            { key: 'beauty', label: '💄 美妆', val: extractedInterest.beauty }
-        ];
-        const maxVal = Math.max(...tags.map(t => t.val));
-        interestResult.innerHTML = tags.map(t => 
-            `<span class="tag ${t.val === maxVal ? 'high' : ''}">${t.label} <span class="val">${(t.val*100).toFixed(0)}%</span></span>`
-        ).join('');
+        // 2. 视频塔：对候选视频计算向量（基于视频标签 + 完播率模拟）
+        currentItemVectors = candidateVideos.map(v => {
+            // 视频特征：标签 + 模拟完播率/热度
+            const base = { food: 0, funny: 0, sports: 0, beauty: 0 };
+            base[v.tag] = 0.7 + Math.random() * 0.25;
+            // 归一化
+            const s = Object.values(base).reduce((a,b) => a+b, 0);
+            Object.keys(base).forEach(k => base[k] /= s);
+            return { ...v, vector: base };
+        });
 
-        const maxTag = tags.find(t => t.val === maxVal);
-        interestNote.textContent = `🧠 网络从行为中自动学习：该用户偏爱「${maxTag.label}」类内容（权重最高）`;
+        // 3. 计算相似度（用第一候选展示）
+        const firstItem = currentItemVectors[0];
+        const sim = Object.keys(userVec).reduce((a, k) => a + userVec[k] * firstItem.vector[k], 0);
 
-        recStatusTag.textContent = '✅ 已提取兴趣';
+        // 显示双塔结果
+        towerDisplay.style.display = 'block';
+        const uStr = `[${Object.values(userVec).map(v => v.toFixed(2)).join(', ')}]`;
+        userVectorDisplay.textContent = uStr;
+        const iStr = `[${Object.values(firstItem.vector).map(v => v.toFixed(2)).join(', ')}]`;
+        itemVectorDisplay.textContent = iStr;
+        similarityDisplay.textContent = sim.toFixed(3);
+        if (sim > 0.4) {
+            similarityLabel.textContent = '✅ 高度相关';
+            similarityLabel.style.color = '#7ddf9a';
+        } else if (sim > 0.2) {
+            similarityLabel.textContent = '🔶 中等相关';
+            similarityLabel.style.color = '#f7d44a';
+        } else {
+            similarityLabel.textContent = '❌ 弱相关';
+            similarityLabel.style.color = '#f7a58a';
+        }
+
+        recStatusTag.textContent = '✅ 双塔前向传播完成';
         recStatusTag.className = 'status-tag done';
-
-        // 清空之前的排序结果
         rankingDisplay.style.display = 'none';
-        rankedResults = null;
+        rankedResultsV2 = null;
     });
 
-    // 重置兴趣
-    resetInterestBtn.addEventListener('click', function() {
-        extractedInterest = null;
-        rankedResults = null;
-        interestDisplay.style.display = 'none';
+    resetForwardBtn.addEventListener('click', function() {
+        currentUserVector = null;
+        currentItemVectors = null;
+        rankedResultsV2 = null;
+        towerDisplay.style.display = 'none';
         rankingDisplay.style.display = 'none';
-        recStatusTag.textContent = '⏳ 未训练';
+        recStatusTag.textContent = '⏳ 未开始';
         recStatusTag.className = 'status-tag';
     });
 
-    // 推荐排序
+    // 排序
     rankBtn.addEventListener('click', function() {
-        if (!extractedInterest) {
-            alert('请先点击「提取兴趣向量」！');
+        if (!currentUserVector || !currentItemVectors) {
+            alert('请先点击「执行双塔前向传播」！');
             return;
         }
 
-        const user = userData[currentUser];
-        // 神经网络逐条打分：用户特征 + 视频特征 → 点击概率
-        const scored = videoDB.map(v => {
-            const interestScore = extractedInterest[v.tag] || 0;
-            // 模拟完播率、点赞率等影响因素
-            const boost = 0.85 + Math.random() * 0.3;
-            let score = Math.min(0.98, interestScore * 1.2 + 0.05 + Math.random() * 0.08);
-            // 如果用户历史上对这类视频有完播/点赞，额外加分
-            const historyMatch = user.history.filter(h => h.tag === v.tag);
-            if (historyMatch.length > 0) {
-                const likes = historyMatch.filter(h => h.action.includes('点赞') || h.action.includes('完播')).length;
-                score = Math.min(0.98, score + likes * 0.04);
-            }
-            return { ...v, score: Math.round(score * 100) };
+        const scored = currentItemVectors.map(item => {
+            const sim = Object.keys(currentUserVector).reduce((a, k) => a + currentUserVector[k] * item.vector[k], 0);
+            return { ...item, score: Math.round(Math.min(0.98, sim + 0.02) * 100) };
         });
-
-        // 按分数降序排列
         scored.sort((a, b) => b.score - a.score);
-        rankedResults = scored;
+        rankedResultsV2 = scored;
 
-        // 显示排序结果
         rankingDisplay.style.display = 'block';
-        scoringList.innerHTML = scored.map((item, idx) => {
+        scoringListV2.innerHTML = scored.map((item, idx) => {
             const isTop = idx === 0;
-            return `<div class="scoring-item ${isTop ? 'top' : ''}">
+            return `<div class="scoring-item-v2 ${isTop ? 'top' : ''}">
                 <span class="rank">#${idx + 1}</span>
                 <span class="title">${item.title}</span>
                 <span class="score ${isTop ? 'high' : ''}">${item.score}%</span>
@@ -1048,20 +1094,18 @@
         }).join('');
 
         const top = scored[0];
-        rankNote.textContent = `🏆 推荐结果：${top.title} 得分最高（${top.score}%），排在第一位！`;
+        rankNoteV2.textContent = `🏆 推荐结果：${top.title} 得分最高（${top.score}%），排在第一位！`;
 
-        recStatusTag.textContent = '✅ 已推荐';
+        recStatusTag.textContent = '✅ 推荐完成';
         recStatusTag.className = 'status-tag done';
     });
 
-    // 重置推荐
     resetRankBtn.addEventListener('click', function() {
-        rankedResults = null;
+        rankedResultsV2 = null;
         rankingDisplay.style.display = 'none';
-        // 不重置兴趣，只重置排序结果
     });
 
-    // 初始化显示
+    // 初始化
     updateUserDisplay();
     updateTrainUI();
     resetLayerStatus();
