@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神经网络实验平台 · 双塔推荐</title>
+    <title>神经网络实验平台 · DIN注意力机制</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -216,47 +216,72 @@
         .history-tag.like { background: #a8e6b0; color: #1a6a3a; }
         .history-tag.dislike { background: #f5c6c6; color: #b02a1a; }
 
-        .tower-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
+        .attention-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
             margin-top: 6px;
         }
-        @media (max-width: 600px) { .tower-container { grid-template-columns: 1fr; } }
-        .tower-box {
-            background: #142a44;
-            border-radius: 12px;
-            padding: 12px 14px;
-            border: 1px solid #1a3a5f;
-        }
-        .tower-box .tower-title {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .tower-box .tower-title .user-color { color: #7ddf9a; }
-        .tower-box .tower-title .item-color { color: #f7d44a; }
-        .tower-box .tower-row {
+        .attention-row {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 12px;
-            color: #b0d4f0;
-            padding: 3px 0;
-            flex-wrap: wrap;
-        }
-        .tower-box .tower-row .arrow { color: #5a8aaa; }
-        .tower-box .tower-row .highlight { color: #f7d44a; font-weight: 600; }
-        .tower-box .tower-row .highlight-green { color: #7ddf9a; font-weight: 600; }
-        .tower-box .vector-display {
-            background: #0a1a2f;
+            background: #142a44;
             border-radius: 8px;
             padding: 6px 12px;
-            font-family: monospace;
             font-size: 13px;
+            flex-wrap: wrap;
+        }
+        .attention-row .wbar {
+            flex: 1;
+            min-width: 60px;
+            height: 6px;
+            background: #1a3a5f;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .attention-row .wbar .fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        .attention-row .wnum {
+            min-width: 44px;
+            text-align: right;
+            font-weight: 600;
             color: #f7d44a;
-            margin-top: 4px;
-            text-align: center;
+            font-size: 13px;
+        }
+        .attention-row .label { color: #8ab8e6; min-width: 40px; }
+
+        .section-title {
+            font-weight: 500;
+            font-size: 15px;
+            color: #0b2b4a;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { color: #2b7be4; }
+
+        .highlight-box {
+            background: #0a1a2f;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 8px;
+        }
+        .highlight-box .hl-title { color: #8ab8e6; font-size: 13px; margin-bottom: 4px; }
+        .highlight-box .hl-content { color: #b0d4f0; font-size: 14px; }
+
+        .candidate-badge {
+            display: inline-block;
+            background: #d48c1a;
+            color: white;
+            border-radius: 30px;
+            padding: 0 14px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .scoring-list-v2 {
@@ -280,61 +305,30 @@
         .scoring-item-v2 .score { font-weight: 600; color: #8ab8e6; }
         .scoring-item-v2 .score.high { color: #7ddf9a; }
         .scoring-item-v2.top { background: #1a4a3a; border-color: #7ddf9a; }
-        .highlight-box {
-            background: #0a1a2f;
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-top: 8px;
-        }
-        .highlight-box .hl-title { color: #8ab8e6; font-size: 13px; margin-bottom: 4px; }
-        .highlight-box .hl-content { color: #b0d4f0; font-size: 14px; }
-        .highlight-box .hl-content .em { color: #f7d44a; font-weight: 600; }
 
-        .section-title {
-            font-weight: 500;
-            font-size: 15px;
-            color: #0b2b4a;
-            margin-bottom: 6px;
+        .interest-result {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 4px;
         }
-        .section-title i { color: #2b7be4; }
-        .candidate-badge {
-            display: inline-block;
-            background: #d48c1a;
-            color: white;
+        .interest-result .tag {
+            padding: 4px 16px;
             border-radius: 30px;
-            padding: 0 14px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .similarity-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 4px 0;
-            font-size: 13px;
-        }
-        .similarity-row .bar-small {
-            flex: 1;
-            height: 6px;
+            font-size: 14px;
+            font-weight: 500;
             background: #1a3a5f;
-            border-radius: 4px;
-            overflow: hidden;
+            color: #8ab8e6;
         }
-        .similarity-row .bar-small .fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s;
+        .interest-result .tag.high {
+            background: #f7d44a;
+            color: #0a1a2f;
         }
-        .similarity-row .sim-num {
-            min-width: 44px;
-            text-align: right;
-            font-weight: 600;
+        .interest-result .tag .val {
             color: #f7d44a;
-            font-size: 13px;
+            font-weight: 600;
         }
+        .interest-result .tag.high .val { color: #0a1a2f; }
     </style>
 </head>
 <body>
@@ -461,15 +455,15 @@
             </div>
         </div>
 
-        <!-- ===== 短视频推荐（双塔模型） ===== -->
+        <!-- ===== 短视频推荐（DIN注意力机制 + 稠密向量） ===== -->
         <div class="case-panel">
             <div class="panel-title">
                 <i class="fas fa-thumbs-up"></i> 短视频个性化推荐
-                <small>双塔模型 · 用户塔 + 视频塔</small>
+                <small>注意力机制 · DIN</small>
                 <span class="status-tag" id="recStatusTag">⏳ 未开始</span>
             </div>
 
-            <!-- 步骤0：用户特征 + 历史序列 -->
+            <!-- 步骤0 -->
             <div class="input-area">
                 <div class="section-title"><i class="fas fa-user"></i> 步骤0：用户特征 + 历史观看序列</div>
                 <div class="user-btn-group" id="userBtnGroup">
@@ -482,59 +476,47 @@
                     <div id="userInfoText">张三 · 22岁 · iPhone · 夜间活跃</div>
                     <div style="margin-top:8px; font-weight:600; font-size:13px; color:#4d6f91;">📜 历史观看序列（4条）：</div>
                     <div id="historyList"></div>
+                    <div style="margin-top:6px; font-size:12px; color:#6a8aaa;">💡 候选视频 <span class="candidate-badge" id="candidateLabel">V5：🍣 日料大师·刺身</span> 主动去历史里找相关的</div>
                 </div>
             </div>
 
-            <!-- 步骤1：双塔模型 -->
+            <!-- 步骤1：Attention -->
             <div class="input-area" style="background:#eaf3fe;">
-                <div class="section-title"><i class="fas fa-code-branch" style="color:#d48c1a;"></i> 步骤1：双塔模型前向传播</div>
+                <div class="section-title"><i class="fas fa-bullseye" style="color:#d48c1a;"></i> 步骤1：Attention注意力机制</div>
                 <div style="font-size:13px; color:#4d6f91; margin-bottom:6px;">
-                    🧑 用户塔 + 🎬 视频塔 = 两路独立的DNN网络，各自输出向量，最后算相似度
+                    🎯 候选V5 与 历史V1~V4 算相似度 → Softmax归一化 → 加权求和 → 兴趣向量
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn btn-warning" id="forwardBtn"><i class="fas fa-play"></i> 🚀 执行双塔前向传播</button>
-                    <button class="btn btn-outline" id="resetForwardBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+                    <button class="btn btn-warning" id="attentionBtn"><i class="fas fa-magic"></i> ⚡ 计算Attention</button>
+                    <button class="btn btn-outline" id="resetAttentionBtn"><i class="fas fa-undo-alt"></i> 重置</button>
                 </div>
-                <div id="towerDisplay" style="display:none; margin-top:8px;">
+                <div id="attentionDisplay" style="display:none; margin-top:8px;">
                     <div class="highlight-box">
-                        <div class="hl-title">🧠 双塔网络结构（用户塔 + 视频塔）</div>
-                        <div class="tower-container">
-                            <!-- 用户塔 -->
-                            <div class="tower-box">
-                                <div class="tower-title"><span class="user-color">🧑 用户塔</span></div>
-                                <div class="tower-row">用户特征 → Embedding → DNN</div>
-                                <div class="tower-row"><span class="arrow">▶</span> 输出用户向量 <span id="userVectorDisplay" style="color:#7ddf9a;font-weight:600;">[0.72, 0.15, 0.08, 0.05]</span></div>
-                                <div style="font-size:11px; color:#5a8aaa; margin-top:4px;">👆 用户塔从用户属性和历史中学习兴趣</div>
+                        <div class="hl-title">⚡ Attention权重计算（V5 与 V1~V4 的相似度）：</div>
+                        <div class="attention-grid" id="attentionGrid"></div>
+                        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #1a3a5f;">
+                            <div style="font-size:13px; color:#b0d4f0;" id="attentionSummary"></div>
+                            <div style="font-size:13px; color:#b0d4f0; margin-top:4px;">
+                                📊 加权聚合后兴趣向量：<span id="interestVecDisplay" style="color:#f7d44a;font-weight:600;">[0.62, 0.24, 0.08, 0.06]</span>
                             </div>
-                            <!-- 视频塔 -->
-                            <div class="tower-box">
-                                <div class="tower-title"><span class="item-color">🎬 视频塔</span></div>
-                                <div class="tower-row">视频特征 → Embedding → DNN</div>
-                                <div class="tower-row"><span class="arrow">▶</span> 输出视频向量 <span id="itemVectorDisplay" style="color:#f7d44a;font-weight:600;">[0.85, 0.05, 0.05, 0.05]</span></div>
-                                <div style="font-size:11px; color:#5a8aaa; margin-top:4px;">👆 视频塔从视频标签、完播率等特征中学习</div>
-                            </div>
-                        </div>
-                        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #1a3a5f; font-size:13px; color:#b0d4f0;">
-                            📊 相似度 = 用户向量 · 视频向量 = <span id="similarityDisplay" style="color:#f7d44a;font-weight:600;">0.89</span>
-                            <span id="similarityLabel" style="color:#7ddf9a;margin-left:8px;">✅ 高度相关</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 步骤2：逐条打分 + 排序 -->
+            <!-- 步骤2：打分排序 -->
             <div class="input-area">
-                <div class="section-title"><i class="fas fa-list-ol" style="color:#1a8b4c;"></i> 步骤2：逐条打分 → 推荐排序</div>
+                <div class="section-title"><i class="fas fa-list-ol" style="color:#1a8b4c;"></i> 步骤2：多目标预测 → 推荐排序</div>
                 <div style="font-size:13px; color:#4d6f91; margin-bottom:6px;">
-                    💡 每条候选视频独立过视频塔，与用户向量算相似度，排序输出
+                    💡 兴趣向量送入DNN → 同时预测 点击/完播/点赞/转发 四个目标
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn btn-success" id="rankBtn"><i class="fas fa-play"></i> 🚀 开始推荐排序</button>
+                    <button class="btn btn-success" id="rankBtn"><i class="fas fa-play"></i> 🚀 多目标预测 & 排序</button>
                     <button class="btn btn-outline" id="resetRankBtn"><i class="fas fa-undo-alt"></i> 重置</button>
                 </div>
                 <div id="rankingDisplay" style="display:none; margin-top:8px;">
                     <div class="highlight-box">
-                        <div class="hl-title">🎯 每条视频独立过视频塔，算相似度：</div>
+                        <div class="hl-title">🎯 每条候选视频的多目标预测分数：</div>
                         <div id="scoringListV2" class="scoring-list-v2"></div>
                         <div style="font-size:12px; color:#5a8aaa; margin-top:6px;" id="rankNoteV2"></div>
                     </div>
@@ -547,14 +529,14 @@
         <span><i class="fas fa-cube"></i> 训练 → 推理 → 可视化</span>
         <span><i class="fas fa-arrow-right"></i> 正向传播 · 误差计算 · 反向传播</span>
         <span><i class="fas fa-weight-hanging"></i> 权重随训练更新，推理不修改</span>
-        <span><i class="fas fa-code"></i> 用户塔 + 视频塔 = 双塔模型</span>
+        <span><i class="fas fa-code"></i> Attention → 兴趣向量 → 多目标预测</span>
     </div>
 </div>
 
 <script>
 (function() {
     // ============================================================
-    // 人脸识别模块（完整保留）
+    // 人脸识别模块（完整保留，略缩）
     // ============================================================
     const addTrainBtn = document.getElementById('addTrainBtn');
     const clearTrainBtn = document.getElementById('clearTrainBtn');
@@ -896,8 +878,16 @@
     });
 
     // ============================================================
-    // 短视频推荐模块（双塔模型）
+    // 短视频推荐（DIN注意力机制 + 稠密向量）
     // ============================================================
+    // 视频Embedding表（稠密向量）
+    const videoEmbMap = {
+        'food':   [0.70, 0.20, 0.05, 0.05],
+        'funny':  [0.15, 0.70, 0.10, 0.05],
+        'sports': [0.10, 0.10, 0.75, 0.05],
+        'beauty': [0.10, 0.05, 0.05, 0.80]
+    };
+
     const userData = {
         A: {
             name: '张三',
@@ -947,22 +937,22 @@
     ];
 
     let currentUser = 'A';
-    let currentUserVector = null;
-    let currentItemVectors = null;
-    let rankedResultsV2 = null;
+    let attentionWeights = null;
+    let interestVec = null;
+    let rankedResults = null;
 
     const recStatusTag = document.getElementById('recStatusTag');
     const userBtns = document.querySelectorAll('.user-btn');
     const behaviorDisplay = document.getElementById('behaviorDisplay');
     const userInfoText = document.getElementById('userInfoText');
     const historyList = document.getElementById('historyList');
-    const forwardBtn = document.getElementById('forwardBtn');
-    const resetForwardBtn = document.getElementById('resetForwardBtn');
-    const towerDisplay = document.getElementById('towerDisplay');
-    const userVectorDisplay = document.getElementById('userVectorDisplay');
-    const itemVectorDisplay = document.getElementById('itemVectorDisplay');
-    const similarityDisplay = document.getElementById('similarityDisplay');
-    const similarityLabel = document.getElementById('similarityLabel');
+    const candidateLabel = document.getElementById('candidateLabel');
+    const attentionBtn = document.getElementById('attentionBtn');
+    const resetAttentionBtn = document.getElementById('resetAttentionBtn');
+    const attentionDisplay = document.getElementById('attentionDisplay');
+    const attentionGrid = document.getElementById('attentionGrid');
+    const attentionSummary = document.getElementById('attentionSummary');
+    const interestVecDisplay = document.getElementById('interestVecDisplay');
     const rankBtn = document.getElementById('rankBtn');
     const resetRankBtn = document.getElementById('resetRankBtn');
     const rankingDisplay = document.getElementById('rankingDisplay');
@@ -975,10 +965,10 @@
             this.classList.add('active');
             currentUser = this.dataset.user;
             updateUserDisplay();
-            currentUserVector = null;
-            currentItemVectors = null;
-            rankedResultsV2 = null;
-            towerDisplay.style.display = 'none';
+            attentionWeights = null;
+            interestVec = null;
+            rankedResults = null;
+            attentionDisplay.style.display = 'none';
             rankingDisplay.style.display = 'none';
             recStatusTag.textContent = '⏳ 未开始';
             recStatusTag.className = 'status-tag';
@@ -994,94 +984,101 @@
             else if (h.action.includes('划走')) cls = 'dislike';
             return `<div class="item">${h.id}: ${h.title} <span class="history-tag ${cls}">${h.action}</span></div>`;
         }).join('');
+        candidateLabel.textContent = `V5：🍣 日料大师·刺身`;
+        attentionWeights = null;
+        interestVec = null;
+        rankedResults = null;
+        attentionDisplay.style.display = 'none';
+        rankingDisplay.style.display = 'none';
+        recStatusTag.textContent = '⏳ 未开始';
+        recStatusTag.className = 'status-tag';
     }
 
-    // 双塔前向传播
-    forwardBtn.addEventListener('click', function() {
+    // 计算Attention（候选V5主动去历史里找相关）
+    attentionBtn.addEventListener('click', function() {
         const user = userData[currentUser];
-        // 1. 用户塔：从历史行为中提取兴趣向量
-        const tagCounts = { food: 0, funny: 0, sports: 0, beauty: 0 };
-        const tagActions = { food: 0, funny: 0, sports: 0, beauty: 0 };
-        user.history.forEach(h => {
-            tagCounts[h.tag] = (tagCounts[h.tag] || 0) + 1;
-            if (h.action.includes('点赞') || h.action.includes('完播')) {
-                tagActions[h.tag] = (tagActions[h.tag] || 0) + 1;
+        const candidateVec = videoEmbMap['food']; // V5是美食
+        const historyVecs = user.history.map(h => videoEmbMap[h.tag] || videoEmbMap['food']);
+
+        // 1. 计算相似度（点积）
+        const rawScores = historyVecs.map(hv => {
+            let sum = 0;
+            for (let i = 0; i < 4; i++) sum += candidateVec[i] * hv[i];
+            return sum;
+        });
+
+        // 2. Softmax归一化
+        const expScores = rawScores.map(s => Math.exp(s * 2.5));
+        const sumExp = expScores.reduce((a,b) => a+b, 0);
+        const attnWeights = expScores.map(e => e / sumExp);
+        attentionWeights = attnWeights;
+
+        // 3. 加权求和得到兴趣向量
+        interestVec = [0,0,0,0];
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                interestVec[j] += attnWeights[i] * historyVecs[i][j];
             }
-        });
-        // 用户向量（基于行为和反馈）
-        const total = Object.values(tagCounts).reduce((a,b) => a+b, 0) || 1;
-        const userVec = {
-            food: (tagCounts.food / total) * 0.8 + (tagActions.food / total) * 0.2 + 0.05,
-            funny: (tagCounts.funny / total) * 0.8 + (tagActions.funny / total) * 0.2 + 0.05,
-            sports: (tagCounts.sports / total) * 0.8 + (tagActions.sports / total) * 0.2 + 0.05,
-            beauty: (tagCounts.beauty / total) * 0.8 + (tagActions.beauty / total) * 0.2 + 0.05
-        };
-        const sum = Object.values(userVec).reduce((a,b) => a+b, 0);
-        Object.keys(userVec).forEach(k => userVec[k] /= sum);
-        currentUserVector = userVec;
-
-        // 2. 视频塔：对候选视频计算向量（基于视频标签 + 完播率模拟）
-        currentItemVectors = candidateVideos.map(v => {
-            // 视频特征：标签 + 模拟完播率/热度
-            const base = { food: 0, funny: 0, sports: 0, beauty: 0 };
-            base[v.tag] = 0.7 + Math.random() * 0.25;
-            // 归一化
-            const s = Object.values(base).reduce((a,b) => a+b, 0);
-            Object.keys(base).forEach(k => base[k] /= s);
-            return { ...v, vector: base };
-        });
-
-        // 3. 计算相似度（用第一候选展示）
-        const firstItem = currentItemVectors[0];
-        const sim = Object.keys(userVec).reduce((a, k) => a + userVec[k] * firstItem.vector[k], 0);
-
-        // 显示双塔结果
-        towerDisplay.style.display = 'block';
-        const uStr = `[${Object.values(userVec).map(v => v.toFixed(2)).join(', ')}]`;
-        userVectorDisplay.textContent = uStr;
-        const iStr = `[${Object.values(firstItem.vector).map(v => v.toFixed(2)).join(', ')}]`;
-        itemVectorDisplay.textContent = iStr;
-        similarityDisplay.textContent = sim.toFixed(3);
-        if (sim > 0.4) {
-            similarityLabel.textContent = '✅ 高度相关';
-            similarityLabel.style.color = '#7ddf9a';
-        } else if (sim > 0.2) {
-            similarityLabel.textContent = '🔶 中等相关';
-            similarityLabel.style.color = '#f7d44a';
-        } else {
-            similarityLabel.textContent = '❌ 弱相关';
-            similarityLabel.style.color = '#f7a58a';
         }
 
-        recStatusTag.textContent = '✅ 双塔前向传播完成';
+        // 4. 显示结果
+        attentionDisplay.style.display = 'block';
+        const history = user.history;
+        attentionGrid.innerHTML = history.map((h, idx) => {
+            const pct = (attnWeights[idx] * 100).toFixed(0);
+            const isHigh = attnWeights[idx] > 0.25;
+            const color = isHigh ? '#7ddf9a' : '#5a8aaa';
+            return `<div class="attention-row">
+                <span class="label">${h.id}</span>
+                <span style="color:#b0d4f0; font-size:12px; min-width:70px;">${h.title.slice(0,12)}</span>
+                <span style="color:#8ab8e6; font-size:11px;">相似度 ${(rawScores[idx]*100).toFixed(0)}%</span>
+                <div class="wbar"><div class="fill" style="width:${pct}%; background:${color};"></div></div>
+                <span class="wnum">${pct}%</span>
+                <span style="font-size:11px; color:${isHigh ? '#7ddf9a' : '#5a8aaa'}; min-width:50px;">${isHigh ? '✅ 相关' : '❌ 弱'}</span>
+            </div>`;
+        }).join('');
+
+        const maxIdx = attnWeights.indexOf(Math.max(...attnWeights));
+        attentionSummary.innerHTML = `📌 V5（日料·刺身）与历史中最相关的是 <strong style="color:#f7d44a;">${history[maxIdx].id}（${history[maxIdx].title}）</strong>，注意力权重 <strong style="color:#f7d44a;">${(attnWeights[maxIdx]*100).toFixed(0)}%</strong>`;
+        interestVecDisplay.textContent = `[${interestVec.map(v => v.toFixed(2)).join(', ')}]`;
+
+        recStatusTag.textContent = '✅ Attention计算完成';
         recStatusTag.className = 'status-tag done';
         rankingDisplay.style.display = 'none';
-        rankedResultsV2 = null;
+        rankedResults = null;
     });
 
-    resetForwardBtn.addEventListener('click', function() {
-        currentUserVector = null;
-        currentItemVectors = null;
-        rankedResultsV2 = null;
-        towerDisplay.style.display = 'none';
+    resetAttentionBtn.addEventListener('click', function() {
+        attentionWeights = null;
+        interestVec = null;
+        rankedResults = null;
+        attentionDisplay.style.display = 'none';
         rankingDisplay.style.display = 'none';
         recStatusTag.textContent = '⏳ 未开始';
         recStatusTag.className = 'status-tag';
     });
 
-    // 排序
+    // 多目标预测 + 排序
     rankBtn.addEventListener('click', function() {
-        if (!currentUserVector || !currentItemVectors) {
-            alert('请先点击「执行双塔前向传播」！');
+        if (!interestVec) {
+            alert('请先点击「计算Attention」！');
             return;
         }
 
-        const scored = currentItemVectors.map(item => {
-            const sim = Object.keys(currentUserVector).reduce((a, k) => a + currentUserVector[k] * item.vector[k], 0);
-            return { ...item, score: Math.round(Math.min(0.98, sim + 0.02) * 100) };
+        const scored = candidateVideos.map(v => {
+            const vEmb = videoEmbMap[v.tag] || videoEmbMap['food'];
+            // 多目标预测：点击、完播、点赞、转发
+            const click = Math.min(0.98, interestVec.reduce((a,b,i) => a + b * vEmb[i], 0) * 1.2 + 0.05 + Math.random() * 0.04);
+            const finish = Math.min(0.98, click * 0.9 + 0.08 + Math.random() * 0.04);
+            const like = Math.min(0.98, click * 0.7 + 0.1 + Math.random() * 0.04);
+            const share = Math.min(0.98, click * 0.5 + 0.05 + Math.random() * 0.04);
+            // 最终融合分
+            const finalScore = (click * 0.4 + finish * 0.3 + like * 0.2 + share * 0.1);
+            return { ...v, click, finish, like, share, finalScore: Math.round(finalScore * 100) };
         });
-        scored.sort((a, b) => b.score - a.score);
-        rankedResultsV2 = scored;
+
+        scored.sort((a,b) => b.finalScore - a.finalScore);
+        rankedResults = scored;
 
         rankingDisplay.style.display = 'block';
         scoringListV2.innerHTML = scored.map((item, idx) => {
@@ -1089,23 +1086,23 @@
             return `<div class="scoring-item-v2 ${isTop ? 'top' : ''}">
                 <span class="rank">#${idx + 1}</span>
                 <span class="title">${item.title}</span>
-                <span class="score ${isTop ? 'high' : ''}">${item.score}%</span>
+                <span style="font-size:11px; color:#6a9ac0;">点击${(item.click*100).toFixed(0)}%</span>
+                <span style="font-size:11px; color:#6a9ac0;">完播${(item.finish*100).toFixed(0)}%</span>
+                <span style="font-size:11px; color:#6a9ac0;">点赞${(item.like*100).toFixed(0)}%</span>
+                <span class="score ${isTop ? 'high' : ''}">${item.finalScore}%</span>
             </div>`;
         }).join('');
 
-        const top = scored[0];
-        rankNoteV2.textContent = `🏆 推荐结果：${top.title} 得分最高（${top.score}%），排在第一位！`;
-
-        recStatusTag.textContent = '✅ 推荐完成';
+        rankNoteV2.textContent = `🏆 推荐结果：${scored[0].title} 综合得分最高（${scored[0].finalScore}%），排在第一位！`;
+        recStatusTag.textContent = '✅ 多目标预测完成';
         recStatusTag.className = 'status-tag done';
     });
 
     resetRankBtn.addEventListener('click', function() {
-        rankedResultsV2 = null;
+        rankedResults = null;
         rankingDisplay.style.display = 'none';
     });
 
-    // 初始化
     updateUserDisplay();
     updateTrainUI();
     resetLayerStatus();
