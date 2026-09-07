@@ -310,7 +310,7 @@
                     <div class="section-title"><i class="fas fa-chart-line" style="color:#1a8b4c;"></i> 步骤3：多目标预测（DNN打分）</div>
                     <div style="font-size:13px; color:#4d6f91; margin-bottom:4px;">
                         💡 兴趣向量送入DNN → 预测 点击/完播/点赞/转发
-                        <span class="filter-note"><i class="fas fa-filter"></i> 已自动过滤你看过的视频</span>
+                        <span class="filter-note"><i class="fas fa-filter"></i> 已自动过滤你看过或不喜欢的视频</span>
                     </div>
                     <button class="btn btn-success" id="multiTargetBtn"><i class="fas fa-play"></i> 🚀 多目标预测 & 排序</button>
                     <button class="btn btn-outline" id="resetMultiBtn"><i class="fas fa-undo-alt"></i> 重置</button>
@@ -630,7 +630,7 @@
             });
 
             // ============================================================
-            // 短视频推荐（完整版 + 精确过滤）
+            // 短视频推荐（完整版 + 精确过滤 + 不喜欢关键词硬过滤）
             // ============================================================
             const allVideos = [
                 { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
@@ -643,7 +643,6 @@
                 { id: 'V8', title: '💄 新手化妆教程', tag: 'beauty' },
             ];
 
-            // ★★★ 候选池标题与用户池完全一致，方便测试过滤 ★★★
             const candidateVideos = [
                 { id: 'C1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
                 { id: 'C2', title: '🍣 日料大师 · 刺身', tag: 'food' },
@@ -936,7 +935,7 @@
                 recStatusTag.className = isRecTrained ? 'status-tag done' : 'status-tag';
             });
 
-            // --- 多目标预测 + 精确过滤（修复版） ---
+            // --- 多目标预测 + 精确过滤 + 不喜欢关键词硬过滤 ---
             multiTargetBtn.addEventListener('click', function() {
                 if (!isRecTrained || !recWeights) {
                     alert('请先完成训练！（点击「开始训练」）');
@@ -947,33 +946,44 @@
                     return;
                 }
 
-                // ★★★ 精确获取用户已选的所有视频标题 ★★★
                 const selectedEntries = Object.entries(selections).filter(([id, val]) => val !== null);
                 const selectedTitles = selectedEntries.map(([id]) => {
                     const v = allVideos.find(v => v.id === id);
                     return v ? v.title : '';
                 }).filter(t => t !== '');
 
-                // ★★★ 硬过滤：移除所有用户已选的视频 ★★★
-                const filteredCandidates = candidateVideos.filter(v => {
-                    return !selectedTitles.some(title => title === v.title);
-                });
-
-                if (filteredCandidates.length === 0) {
-                    alert('所有候选视频你都看过了！请重置选择或添加更多视频。');
-                    return;
-                }
-
-                // 统计“不喜欢”标签用于降权
-                const dislikeTags = {};
+                // ★★★ 新增：收集“不喜欢”的关键词（用于硬过滤同类内容） ★★★
+                const dislikeKeywords = [];
                 selectedEntries.forEach(([id, val]) => {
                     if (val === 'dislike') {
                         const v = allVideos.find(v => v.id === id);
                         if (v) {
-                            dislikeTags[v.tag] = (dislikeTags[v.tag] || 0) + 1;
+                            const cleanTitle = v.title.replace(/[🍜🏀😂🤣💄]/g, '').trim();
+                            const parts = cleanTitle.split('·');
+                            if (parts.length > 1) {
+                                dislikeKeywords.push(parts[1].trim());
+                            } else {
+                                dislikeKeywords.push(cleanTitle);
+                            }
                         }
                     }
                 });
+
+                // ★★★ 过滤：用户已选 + 不喜欢关键词硬过滤 ★★★
+                const filteredCandidates = candidateVideos.filter(v => {
+                    // 1. 用户已选的视频（硬过滤）
+                    if (selectedTitles.some(title => title === v.title)) return false;
+                    // 2. 包含“不喜欢”关键词的视频（硬过滤）
+                    for (let kw of dislikeKeywords) {
+                        if (v.title.includes(kw)) return false;
+                    }
+                    return true;
+                });
+
+                if (filteredCandidates.length === 0) {
+                    alert('所有候选视频你都看过了（或不喜欢的同类内容已被过滤）！请重置选择。');
+                    return;
+                }
 
                 const scored = filteredCandidates.map(v => {
                     const vEmb = videoEmbMap[v.tag] || videoEmbMap['food'];
@@ -985,23 +995,11 @@
                     });
                     sim = Math.max(0.01, Math.min(1.0, sim));
 
-                    // 不喜欢降权
-                    let dislikePenalty = 1.0;
-                    if (dislikeTags[v.tag] && dislikeTags[v.tag] > 0) {
-                        dislikePenalty = Math.max(0.7, 1.0 - dislikeTags[v.tag] * 0.1);
-                    }
-
                     const weightFactor = recWeights.reduce((a, b) => a + b, 0) / recWeights.length;
-                    let click = Math.min(0.98, Math.max(0.01, sim * 1.3 + 0.05 + Math.random() * 0.04));
-                    let finish = Math.min(0.98, Math.max(0.01, click * 0.9 + 0.08 + Math.random() * 0.04));
-                    let like = Math.min(0.98, Math.max(0.01, click * 0.7 + 0.1 + Math.random() * 0.04));
-                    let share = Math.min(0.98, Math.max(0.01, click * 0.5 + 0.05 + Math.random() * 0.04));
-
-                    click *= dislikePenalty;
-                    finish *= dislikePenalty;
-                    like *= dislikePenalty;
-                    share *= dislikePenalty;
-
+                    const click = Math.min(0.98, Math.max(0.01, sim * 1.3 + 0.05 + Math.random() * 0.04));
+                    const finish = Math.min(0.98, Math.max(0.01, click * 0.9 + 0.08 + Math.random() * 0.04));
+                    const like = Math.min(0.98, Math.max(0.01, click * 0.7 + 0.1 + Math.random() * 0.04));
+                    const share = Math.min(0.98, Math.max(0.01, click * 0.5 + 0.05 + Math.random() * 0.04));
                     const finalScore = (click * 0.4 + finish * 0.3 + like * 0.2 + share * 0.1);
                     return {
                         ...v,
@@ -1035,7 +1033,7 @@
                 const totalCandidates = candidateVideos.length;
                 const removedCount = totalCandidates - filteredCandidates.length;
                 const removedMsg = removedCount > 0 ?
-                    `（已过滤 ${removedCount} 个你看过的视频，从 ${totalCandidates} 个候选中筛选出 ${filteredCandidates.length} 个）` :
+                    `（已过滤 ${removedCount} 个你看过或不喜欢的视频，从 ${totalCandidates} 个候选中筛选出 ${filteredCandidates.length} 个）` :
                     `（${filteredCandidates.length} 个候选视频均为你没看过的）`;
 
                 multiNote.textContent = `🏆 给你的推荐：${scored[0].title} 综合得分最高（${scored[0].finalScore}%），排在第一位！ ${removedMsg}`;
