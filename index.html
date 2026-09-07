@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神经网络实验平台 · 推荐流程可视化</title>
+    <title>神经网络实验平台 · 完整双栏版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -336,7 +336,7 @@
     <script>
         (function() {
             // ============================================================
-            // 人脸识别模块（完整版）
+            // 人脸识别模块
             // ============================================================
             const addTrainBtn = document.getElementById('addTrainBtn');
             const clearTrainBtn = document.getElementById('clearTrainBtn');
@@ -630,7 +630,7 @@
             });
 
             // ============================================================
-            // 短视频推荐（完整版 + 精确过滤 + 不喜欢关键词硬过滤）
+            // 短视频推荐
             // ============================================================
             const allVideos = [
                 { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
@@ -952,7 +952,7 @@
                     return v ? v.title : '';
                 }).filter(t => t !== '');
 
-                // ★★★ 新增：收集“不喜欢”的关键词（用于硬过滤同类内容） ★★★
+                // 收集“不喜欢”关键词（硬过滤）
                 const dislikeKeywords = [];
                 selectedEntries.forEach(([id, val]) => {
                     if (val === 'dislike') {
@@ -969,11 +969,8 @@
                     }
                 });
 
-                // ★★★ 过滤：用户已选 + 不喜欢关键词硬过滤 ★★★
                 const filteredCandidates = candidateVideos.filter(v => {
-                    // 1. 用户已选的视频（硬过滤）
                     if (selectedTitles.some(title => title === v.title)) return false;
-                    // 2. 包含“不喜欢”关键词的视频（硬过滤）
                     for (let kw of dislikeKeywords) {
                         if (v.title.includes(kw)) return false;
                     }
