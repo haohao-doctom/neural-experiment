@@ -11,8 +11,10 @@
         .container { max-width: 800px; width: 100%; background: white; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,20,40,0.12); padding: 32px 36px 40px; }
         .back { display: inline-block; color: #2b7be4; text-decoration: none; font-size: 14px; margin-bottom: 16px; }
         .back:hover { text-decoration: underline; }
-        .title { font-size: 24px; font-weight: 600; color: #0a2647; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        .title { font-size: 24px; font-weight: 600; color: #0a2647; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .title small { font-weight: 400; font-size: 14px; color: #5f7d9c; }
+        .title .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; margin-left: 8px; }
+        .title .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
         .subtitle { color: #5f7d9c; font-size: 14px; margin-bottom: 20px; }
         .input-area { background: #f9fbfe; border-radius: 20px; padding: 18px 16px 16px; margin-bottom: 16px; }
         .section-title { font-weight: 500; font-size: 15px; color: #0b2b4a; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
@@ -25,7 +27,7 @@
         .btn-warning { background: #d48c1a; border-color: #d48c1a; color: white; }
         .btn-warning:hover { background: #b0700f; transform: scale(0.97); }
         .btn-outline { background: transparent; border: 1px solid #b0c8e3; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 10px; margin-top: 6px; }
         .file-upload { background: white; border: 1px solid #ccdcee; border-radius: 60px; padding: 6px 18px 6px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1 1 160px; }
         .file-upload:hover { background: #edf4fe; }
@@ -54,12 +56,18 @@
         .confidence { background: #e3edfa; padding: 6px 18px; border-radius: 60px; font-size: 15px; font-weight: 500; }
         .note { font-size: 13px; color: #4d6f91; margin-top: 6px; }
         .footer { text-align: center; margin-top: 24px; color: #5b7999; font-size: 13px; border-top: 1px solid #e2ecf7; padding-top: 18px; }
+        .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; }
+        .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
     </style>
 </head>
 <body>
 <div class="container">
     <a href="index.html" class="back"><i class="fas fa-arrow-left"></i> 返回首页</a>
-    <div class="title">📸 校园人脸识别签到 <small>训练 + 推理</small></div>
+    <div class="title">
+        📸 校园人脸识别签到
+        <small>训练 + 推理</small>
+        <span class="status-tag" id="faceStatusTag">⏳ 未训练</span>
+    </div>
     <div class="subtitle">上传训练照片 → 训练网络 → 推理比对</div>
 
     <!-- 步骤0 -->
@@ -96,7 +104,7 @@
         <div class="training-log" id="trainLog"><div class="info">⏳ 等待训练...</div></div>
         <div class="weight-bar">
             <span style="font-size:12px; color:#4d6f91;">权重收敛</span>
-            <div class="track"><div class="fill" id="weightBar"></div></div>
+            <div class="track"><div class="fill" id="weightBarFill"></div></div>
             <span style="font-size:12px; color:#4d6f91;" id="weightLabel">5%</span>
         </div>
         <div class="weight-display" id="weightDisplay">
@@ -136,7 +144,7 @@
 <script>
 (function() {
     // ============================================================
-    // 人脸识别模块（完整）
+    // 人脸识别模块
     // ============================================================
     const trainUpload = document.getElementById('trainUpload');
     const trainCount = document.getElementById('trainCount');
@@ -150,10 +158,11 @@
     const trainBtn = document.getElementById('trainBtn');
     const resetTrainBtn = document.getElementById('resetTrainBtn');
     const trainLog = document.getElementById('trainLog');
-    const weightBar = document.getElementById('weightBar');
+    const weightBarFill = document.getElementById('weightBarFill');
     const weightLabel = document.getElementById('weightLabel');
     const weightDisplay = document.getElementById('weightDisplay');
     const weightValues = document.getElementById('weightValues');
+    const faceStatusTag = document.getElementById('faceStatusTag');
     const lrSlider = document.getElementById('lrSlider');
     const lrVal = document.getElementById('lrVal');
     const inferUpload = document.getElementById('inferUpload');
@@ -168,13 +177,17 @@
     let trainData = [];
     let trainedWeights = null;
     let isTrained = false;
+    let isTraining = false;
 
     lrSlider.addEventListener('input', function() {
         lrVal.textContent = (parseInt(this.value) / 10).toFixed(1);
     });
 
-    // 添加训练照片
-    let pendingFiles = [];
+    // 添加训练照片（支持多选 + 标签）
+    addLabelBtn.addEventListener('click', function() {
+        trainUpload.click();
+    });
+
     trainUpload.addEventListener('change', function(e) {
         const files = this.files;
         if (!files || files.length === 0) return;
@@ -192,19 +205,16 @@
         this.value = '';
     });
 
-    addLabelBtn.addEventListener('click', function() {
-        trainUpload.click();
-    });
-
     clearBtn.addEventListener('click', function() {
         if (trainData.length === 0) return;
         if (confirm('确定要清空所有训练照片吗？')) {
             trainData = [];
             trainedWeights = null;
             isTrained = false;
+            isTraining = false;
             updateUI();
             trainLog.innerHTML = '<div class="info">⏳ 等待训练...</div>';
-            weightBar.style.width = '5%';
+            weightBarFill.style.width = '5%';
             weightLabel.textContent = '5%';
             weightDisplay.style.display = 'none';
             resultLabel.textContent = '等待推理';
@@ -213,6 +223,10 @@
             inferPreview.innerHTML = '<div class="placeholder">等待上传</div>';
             inferFileName.textContent = '未选择';
             trainSample.innerHTML = '<div class="placeholder">训练后显示</div>';
+            faceStatusTag.textContent = '⏳ 未训练';
+            faceStatusTag.className = 'status-tag';
+            trainBtn.disabled = false;
+            trainBtn.textContent = '🚀 开始训练';
         }
     });
 
@@ -240,6 +254,8 @@
 
     // 训练
     trainBtn.addEventListener('click', function() {
+        // 防止重复点击
+        if (isTraining) return;
         if (trainData.length < 2) {
             alert('至少需要2张训练照片！');
             return;
@@ -249,6 +265,8 @@
             alert('至少需要2个不同的标签（如：张三、李四）！');
             return;
         }
+
+        isTraining = true;
         trainBtn.disabled = true;
         trainBtn.textContent = '⏳ 训练中...';
         trainLog.innerHTML = '<div class="info">🧠 开始训练...</div>';
@@ -265,15 +283,18 @@
                 clearInterval(interval);
                 trainedWeights = weights.slice();
                 isTrained = true;
+                isTraining = false;
                 trainBtn.disabled = false;
                 trainBtn.textContent = '🚀 开始训练';
+                faceStatusTag.textContent = '✅ 已训练';
+                faceStatusTag.className = 'status-tag done';
                 const wStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
                 weightValues.textContent = '[' + wStr + ']';
                 weightDisplay.style.display = 'block';
                 trainLog.innerHTML += `<div class="ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
                 trainLog.innerHTML += `<div class="info">💡 权重已固定，后续推理不会修改权重</div>`;
                 trainLog.innerHTML += `<div class="gold">📊 最终权重值： [${wStr}]</div>`;
-                weightBar.style.width = '100%';
+                weightBarFill.style.width = '100%';
                 weightLabel.textContent = '100%';
                 resultNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
                 return;
@@ -290,7 +311,7 @@
             }
             const avgLoss = totalLoss / trainData.length;
             const progress = Math.min(100, ((step + 1) / epochs) * 100);
-            weightBar.style.width = progress + '%';
+            weightBarFill.style.width = progress + '%';
             weightLabel.textContent = Math.round(progress) + '%';
             const status = avgLoss < 0.3 ? '✅ 收敛中' : '🔄 调整中';
             logLines.push(`轮次 ${step+1}: 正向传播 → 误差=${avgLoss.toFixed(3)} → 反向传播 → 更新权重 ${status}`);
@@ -302,12 +323,14 @@
     });
 
     resetTrainBtn.addEventListener('click', function() {
+        // 如果正在训练，停止训练
+        isTraining = false;
         trainData = [];
         trainedWeights = null;
         isTrained = false;
         updateUI();
         trainLog.innerHTML = '<div class="info">⏳ 等待训练...</div>';
-        weightBar.style.width = '5%';
+        weightBarFill.style.width = '5%';
         weightLabel.textContent = '5%';
         weightDisplay.style.display = 'none';
         trainBtn.disabled = false;
@@ -319,6 +342,8 @@
         inferFileName.textContent = '未选择';
         trainSample.innerHTML = '<div class="placeholder">训练后显示</div>';
         resultNote.textContent = '💡 请先完成训练，再进行推理';
+        faceStatusTag.textContent = '⏳ 未训练';
+        faceStatusTag.className = 'status-tag';
     });
 
     // 推理
