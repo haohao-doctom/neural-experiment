@@ -11,8 +11,10 @@
         .container { max-width: 1000px; width: 100%; background: white; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,20,40,0.12); padding: 32px 36px 40px; }
         .back { display: inline-block; color: #2b7be4; text-decoration: none; font-size: 14px; margin-bottom: 16px; }
         .back:hover { text-decoration: underline; }
-        .title { font-size: 24px; font-weight: 600; color: #0a2647; display: flex; align-items: center; gap: 10px; }
+        .title { font-size: 24px; font-weight: 600; color: #0a2647; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .title small { font-weight: 400; font-size: 14px; color: #5f7d9c; }
+        .title .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; margin-left: 8px; }
+        .title .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
         .subtitle { color: #5f7d9c; font-size: 14px; margin-bottom: 20px; }
         .input-area { background: #f9fbfe; border-radius: 20px; padding: 18px 16px 16px; margin-bottom: 16px; }
         .section-title { font-weight: 500; font-size: 15px; color: #0b2b4a; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
@@ -77,12 +79,18 @@
         .interest-result .tag.high { background: #f7d44a; color: #0a1a2f; }
         .interest-result .tag .val { color: #f7d44a; font-weight: 600; }
         .interest-result .tag.high .val { color: #0a1a2f; }
+        .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; }
+        .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
     </style>
 </head>
 <body>
 <div class="container">
     <a href="index.html" class="back"><i class="fas fa-arrow-left"></i> 返回首页</a>
-    <div class="title">🎬 短视频个性化推荐 <small>Attention → 兴趣 → 多目标 → 排序</small></div>
+    <div class="title">
+        🎬 短视频个性化推荐
+        <small>Attention → 兴趣 → 多目标 → 排序</small>
+        <span class="status-tag" id="recStatusTag">⏳ 未训练</span>
+    </div>
     <div class="subtitle">选择你看过的视频 → 训练网络 → 提取兴趣 → 推荐排序</div>
 
     <!-- 步骤0 -->
@@ -210,6 +218,7 @@
     let interestVec = null;
     let multiResults = null;
 
+    // ===== DOM 引用 =====
     const recStatusTag = document.getElementById('recStatusTag');
     const videoGrid = document.getElementById('videoGrid');
     const selectedCount = document.getElementById('selectedCount');
@@ -237,7 +246,7 @@
     const multiTargetList = document.getElementById('multiTargetList');
     const multiNote = document.getElementById('multiNote');
 
-    // 渲染视频卡片
+    // ===== 渲染 =====
     function renderVideoGrid() {
         videoGrid.innerHTML = '';
         allVideos.forEach(v => {
@@ -305,10 +314,13 @@
         if (!isRecTrained) {
             recStatusTag.textContent = '⏳ 未训练';
             recStatusTag.className = 'status-tag';
+        } else {
+            recStatusTag.textContent = '✅ 已训练';
+            recStatusTag.className = 'status-tag done';
         }
     }
 
-    // 训练
+    // ===== 训练 =====
     recTrainBtn.addEventListener('click', function() {
         const selected = Object.entries(selections).filter(([id, val]) => val !== null);
         if (selected.length < 2) {
@@ -346,6 +358,8 @@
                 clearInterval(interval);
                 recWeights = weights.slice();
                 isRecTrained = true;
+                recStatusTag.textContent = '✅ 已训练';
+                recStatusTag.className = 'status-tag done';
                 recTrainBtn.disabled = false;
                 recTrainBtn.textContent = '🚀 开始训练';
                 const wStr = recWeights.map(w => w.toFixed(2)).join(', ');
@@ -386,6 +400,8 @@
     recResetTrainBtn.addEventListener('click', function() {
         recWeights = null;
         isRecTrained = false;
+        recStatusTag.textContent = '⏳ 未训练';
+        recStatusTag.className = 'status-tag';
         recTrainLog.innerHTML = '<div class="info">⏳ 等待训练...</div>';
         recWeightBar.style.width = '5%';
         recWeightLabel.textContent = '5%';
@@ -395,7 +411,7 @@
         clearAllResults();
     });
 
-    // Attention
+    // ===== Attention =====
     attentionBtn.addEventListener('click', function() {
         if (!isRecTrained || !recWeights) {
             alert('请先完成训练！（点击「开始训练」）');
@@ -460,6 +476,11 @@
         const maxIdx = attnWeights.indexOf(Math.max(...attnWeights));
         attentionSummary.innerHTML = `📌 V5（日料·刺身）与历史中最相关的是 <strong style="color:#f7d44a;">${historyVideos[maxIdx].id}（${historyVideos[maxIdx].title}）</strong>，注意力权重 <strong style="color:#f7d44a;">${(attnWeights[maxIdx]*100).toFixed(0)}%</strong>`;
         interestVecDisplay.textContent = `[${interestVec.map(v => v.toFixed(2)).join(', ')}]`;
+
+        recStatusTag.textContent = '✅ Attention完成';
+        recStatusTag.className = 'status-tag done';
+        multiDisplay.style.display = 'none';
+        multiResults = null;
     });
 
     resetAttentionBtn.addEventListener('click', function() {
@@ -468,9 +489,11 @@
         multiResults = null;
         attentionDisplay.style.display = 'none';
         multiDisplay.style.display = 'none';
+        recStatusTag.textContent = isRecTrained ? '✅ 已训练' : '⏳ 未训练';
+        recStatusTag.className = isRecTrained ? 'status-tag done' : 'status-tag';
     });
 
-    // 多目标预测
+    // ===== 多目标预测 =====
     multiTargetBtn.addEventListener('click', function() {
         if (!isRecTrained || !recWeights) {
             alert('请先完成训练！（点击「开始训练」）');
@@ -569,11 +592,15 @@
             `（${filteredCandidates.length} 个候选视频均为你没看过的）`;
 
         multiNote.textContent = `🏆 给你的推荐：${scored[0].title} 综合得分最高（${scored[0].finalScore}%），排在第一位！ ${removedMsg}`;
+        recStatusTag.textContent = '✅ 推荐完成';
+        recStatusTag.className = 'status-tag done';
     });
 
     resetMultiBtn.addEventListener('click', function() {
         multiResults = null;
         multiDisplay.style.display = 'none';
+        recStatusTag.textContent = isRecTrained ? '✅ 已训练' : '⏳ 未训练';
+        recStatusTag.className = isRecTrained ? 'status-tag done' : 'status-tag';
     });
 
     resetSelectionBtn.addEventListener('click', function() {
@@ -582,7 +609,7 @@
         renderVideoGrid();
     });
 
-    // 初始化
+    // ===== 初始化 =====
     renderVideoGrid();
     recLrSlider.addEventListener('input', function() {
         recLrVal.textContent = (parseInt(this.value) / 10).toFixed(1);
