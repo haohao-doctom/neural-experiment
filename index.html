@@ -1,3 +1,6 @@
+好，这次是**最终完整修复版**。核心改动已经在代码里全部完成，你直接复制覆盖 `index.html` 即可。
+
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -808,7 +811,7 @@
                 </div>
             </div>
 
-            <!-- ===== 短视频推荐（完整修复版） ===== -->
+            <!-- ===== 短视频推荐（最终修复版） ===== -->
             <div class="case-panel">
                 <div class="panel-title">
                     <i class="fas fa-thumbs-up"></i> 短视频个性化推荐
@@ -1214,7 +1217,7 @@
             });
 
             // ============================================================
-            // 短视频推荐（完整修复版）
+            // 短视频推荐（最终修复版）
             // ============================================================
             const allVideos = [
                 { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
@@ -1450,23 +1453,26 @@
                     alert('请先完成训练！（点击「开始训练」）');
                     return;
                 }
-                const selected = Object.entries(selections).filter(([id, val]) => val !== null);
-                if (selected.length < 2) {
+
+                // ★★★ 修复：取所有选中的视频作为历史，不只是前4条 ★★★
+                const selectedEntries = Object.entries(selections).filter(([id, val]) => val !== null);
+                if (selectedEntries.length < 2) {
                     alert('请至少选择 2 个视频并评价！');
                     return;
                 }
 
                 const historyVideos = [];
-                for (let [id, val] of selected) {
+                for (let [id, val] of selectedEntries) {
                     const v = allVideos.find(v => v.id === id);
                     if (v) historyVideos.push(v);
-                    if (historyVideos.length >= 4) break;
                 }
+
                 if (historyVideos.length < 2) {
                     alert('请至少选择 2 个视频作为历史！');
                     return;
                 }
 
+                // 候选V5（固定为日料·刺身）
                 const candidate = allVideos.find(v => v.id === 'V5');
                 if (!candidate) { alert('候选视频V5不存在！'); return; }
                 const candidateVec = videoEmbMap[candidate.tag] || videoEmbMap['food'];
@@ -1496,6 +1502,7 @@
                     const simPct = (rawScores[idx] * 100).toFixed(0);
                     const isHigh = attnWeights[idx] > 0.25;
                     const color = isHigh ? '#7ddf9a' : '#5a8aaa';
+                    const tagEmoji = ['🍜', '😂', '🏀', '💄'][tagKeys.indexOf(h.tag)] || '📹';
                     return `<div class="attention-row">
                         <span class="label">${h.id}</span>
                         <span style="color:#b0d4f0; font-size:12px; min-width:60px;">${h.title.slice(0,10)}</span>
@@ -1527,7 +1534,7 @@
                 recStatusTag.className = isRecTrained ? 'status-tag done' : 'status-tag';
             });
 
-            // --- 多目标预测 + 标题匹配过滤 + 不喜欢降权 ---
+            // --- 多目标预测 + 硬过滤 + 不喜欢降权 ---
             multiTargetBtn.addEventListener('click', function() {
                 if (!isRecTrained || !recWeights) {
                     alert('请先完成训练！（点击「开始训练」）');
@@ -1580,7 +1587,6 @@
                     // ★★★ 软降权：如果用户不喜欢这个标签，分数打折 ★★★
                     let dislikePenalty = 1.0;
                     if (dislikeTags[v.tag] && dislikeTags[v.tag] > 0) {
-                        // 每点一次“不喜欢”，分数打 9 折，最多打 7 折
                         dislikePenalty = Math.max(0.7, 1.0 - dislikeTags[v.tag] * 0.1);
                     }
 
@@ -1666,3 +1672,4 @@
     </script>
 </body>
 </html>
+```
