@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短视频个性化推荐</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: #f0f4fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1000px; width: 100%; background: white; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,20,40,0.12); padding: 32px 36px 40px; }
+        .back { display: inline-block; color: #2b7be4; text-decoration: none; font-size: 14px; margin-bottom: 16px; }
+        .back:hover { text-decoration: underline; }
+        .title { font-size: 24px; font-weight: 600; color: #0a2647; display: flex; align-items: center; gap: 10px; }
+        .title small { font-weight: 400; font-size: 14px; color: #5f7d9c; }
+        .subtitle { color: #5f7d9c; font-size: 14px; margin-bottom: 20px; }
+        .input-area { background: #f9fbfe; border-radius: 20px; padding: 18px 16px 16px; margin-bottom: 16px; }
+        .section-title { font-weight: 500; font-size: 15px; color: #0b2b4a; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: #2b7be4; }
+        .btn { background: white; border: 1px solid #b6cee9; border-radius: 60px; padding: 8px 22px; font-weight: 500; font-size: 14px; color: #1c4b7a; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.15s; }
+        .btn-primary { background: #1a5fb0; border-color: #1a5fb0; color: white; }
+        .btn-primary:hover { background: #124a8a; transform: scale(0.97); }
+        .btn-success { background: #1a8b4c; border-color: #1a8b4c; color: white; }
+        .btn-success:hover { background: #0f6d3a; transform: scale(0.97); }
+        .btn-warning { background: #d48c1a; border-color: #d48c1a; color: white; }
+        .btn-warning:hover { background: #b0700f; transform: scale(0.97); }
+        .btn-outline { background: transparent; border: 1px solid #b0c8e3; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 10px; margin-top: 6px; }
+        .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+        @media (max-width: 600px) { .video-grid { grid-template-columns: 1fr; } }
+        .video-card { background: white; border: 2px solid #e2ecf5; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; flex-wrap: wrap; }
+        .video-card:hover { border-color: #b0c8e3; }
+        .video-card.selected { border-color: #1a5fb0; background: #edf4fe; }
+        .video-card .check { width: 18px; height: 18px; border: 2px solid #ccdcee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .video-card.selected .check { background: #1a5fb0; border-color: #1a5fb0; color: white; }
+        .video-card .vtitle { flex: 1; font-size: 13px; color: #1a3a5c; }
+        .video-card .actions { display: flex; gap: 4px; }
+        .video-card .actions button { padding: 2px 8px; border-radius: 30px; border: 1px solid #ccdcee; font-size: 11px; cursor: pointer; background: white; transition: 0.15s; }
+        .video-card .actions button:hover { background: #edf4fe; }
+        .video-card .actions .like.active { background: #a8e6b0; border-color: #1a8b4c; color: #1a6a3a; }
+        .video-card .actions .dislike.active { background: #f5c6c6; border-color: #b02a1a; color: #b02a1a; }
+        .selected-count { font-size: 13px; color: #4d6f91; }
+        .value-badge { background: #dfe9f5; padding: 2px 12px; border-radius: 30px; font-size: 13px; font-weight: 500; color: #00337a; min-width: 34px; text-align: center; }
+        .training-log { background: #0a1a2f; color: #b0d4f0; border-radius: 16px; padding: 14px 18px; font-family: monospace; font-size: 13px; max-height: 150px; overflow-y: auto; margin-top: 10px; line-height: 1.7; }
+        .training-log .ok { color: #7ddf9a; }
+        .training-log .info { color: #8ab8e6; }
+        .training-log .gold { color: #f7d44a; font-weight: bold; }
+        .weight-bar { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+        .weight-bar .track { flex: 1; height: 8px; background: #e2eaf3; border-radius: 10px; overflow: hidden; }
+        .weight-bar .fill { height: 100%; background: linear-gradient(90deg, #2b7be4, #1a8b4c); border-radius: 10px; width: 5%; transition: width 0.3s; }
+        .weight-display { background: #1a2a3f; border-radius: 12px; padding: 10px 16px; margin-top: 8px; font-family: monospace; font-size: 14px; color: #f7d44a; border-left: 3px solid #f7d44a; display: none; }
+        .weight-display .label { color: #8ab8e6; font-size: 12px; }
+        .highlight-box { background: #0a1a2f; border-radius: 12px; padding: 12px 16px; margin-top: 8px; }
+        .highlight-box .hl-title { color: #8ab8e6; font-size: 13px; margin-bottom: 4px; }
+        .highlight-box .hl-content { color: #b0d4f0; font-size: 14px; }
+        .attention-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+        .attention-row { display: flex; align-items: center; gap: 8px; background: #142a44; border-radius: 8px; padding: 6px 12px; font-size: 13px; flex-wrap: wrap; }
+        .attention-row .wbar { flex: 1; min-width: 60px; height: 6px; background: #1a3a5f; border-radius: 4px; overflow: hidden; }
+        .attention-row .wbar .fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .attention-row .wnum { min-width: 44px; text-align: right; font-weight: 600; color: #f7d44a; font-size: 13px; }
+        .attention-row .label { color: #8ab8e6; min-width: 30px; }
+        .multi-target-grid { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+        .multi-target-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: #142a44; border-radius: 8px; font-size: 13px; flex-wrap: wrap; gap: 4px; }
+        .multi-target-row .rank { font-weight: 600; color: #6a9ac0; min-width: 24px; }
+        .multi-target-row .title { flex: 1; color: #b0d4f0; margin-left: 6px; }
+        .multi-target-row .targets { display: flex; gap: 8px; font-size: 11px; color: #6a9ac0; }
+        .multi-target-row .targets .high { color: #7ddf9a; }
+        .multi-target-row .final-score { font-weight: 600; color: #8ab8e6; min-width: 40px; text-align: right; }
+        .multi-target-row .final-score.high { color: #7ddf9a; }
+        .multi-target-row.top { background: #1a4a3a; border-color: #7ddf9a; }
+        .filter-note { font-size: 12px; color: #6a9ac0; margin-top: 4px; padding: 4px 10px; background: #0f2440; border-radius: 8px; display: inline-block; }
+        .demo-tip { font-size: 13px; background: #d9e7fc; border-radius: 50px; padding: 4px 14px; color: #00337a; display: inline-block; }
+        .footer { text-align: center; margin-top: 24px; color: #5b7999; font-size: 13px; border-top: 1px solid #e2ecf7; padding-top: 18px; }
+        .interest-result { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+        .interest-result .tag { padding: 4px 16px; border-radius: 30px; font-size: 14px; font-weight: 500; background: #1a3a5f; color: #8ab8e6; }
+        .interest-result .tag.high { background: #f7d44a; color: #0a1a2f; }
+        .interest-result .tag .val { color: #f7d44a; font-weight: 600; }
+        .interest-result .tag.high .val { color: #0a1a2f; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="back"><i class="fas fa-arrow-left"></i> 返回首页</a>
+    <div class="title">🎬 短视频个性化推荐 <small>Attention → 兴趣 → 多目标 → 排序</small></div>
+    <div class="subtitle">选择你看过的视频 → 训练网络 → 提取兴趣 → 推荐排序</div>
+
+    <!-- 步骤0 -->
+    <div class="input-area">
+        <div class="section-title"><i class="fas fa-hand-pointer"></i> 步骤0：选择你看过的视频</div>
+        <div style="font-size:13px; color:#4d6f91; margin-bottom:6px;">💡 点击卡片选择，再点 👍 喜欢 或 👎 不喜欢</div>
+        <div class="video-grid" id="videoGrid"></div>
+        <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span class="selected-count" id="selectedCount">已选 0 个视频</span>
+            <button class="btn btn-outline" id="resetSelectionBtn" style="font-size:12px;"><i class="fas fa-undo-alt"></i> 重置选择</button>
+        </div>
+    </div>
+
+    <!-- 步骤1 -->
+    <div class="input-area" style="background:#eaf3fe;">
+        <div class="section-title"><i class="fas fa-cogs" style="color:#d48c1a;"></i> 步骤1：训练推荐网络</div>
+        <div class="row">
+            <button class="btn btn-warning" id="recTrainBtn"><i class="fas fa-play"></i> 🚀 开始训练</button>
+            <button class="btn btn-outline" id="recResetTrainBtn"><i class="fas fa-undo-alt"></i> 重置训练</button>
+            <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap;">
+                <span style="font-size:13px; color:#1f4970;">隐藏层</span>
+                <input type="range" min="1" max="3" value="2" id="recLayerSlider" style="max-width:70px;">
+                <span class="value-badge" id="recLayerVal">2</span>
+                <span style="font-size:13px; color:#1f4970;">学习率</span>
+                <input type="range" min="1" max="10" value="3" id="recLrSlider" style="max-width:70px;">
+                <span class="value-badge" id="recLrVal">0.3</span>
+                <span style="font-size:12px; color:#8a6a1a;">⚠️ 0.6以上易震荡</span>
+            </div>
+        </div>
+        <div class="training-log" id="recTrainLog"><div class="info">⏳ 等待训练...</div></div>
+        <div class="weight-bar">
+            <span style="font-size:12px; color:#4d6f91;">损失下降</span>
+            <div class="track"><div class="fill" id="recWeightBar"></div></div>
+            <span style="font-size:12px; color:#4d6f91;" id="recWeightLabel">5%</span>
+        </div>
+        <div class="weight-display" id="recWeightDisplay">
+            <span class="label">📊 训练完成！网络权重：</span>
+            <span id="recWeightValues">[0.72, 0.55, 0.08, 0.05]</span>
+            <div style="font-size:11px; color:#5a8aaa; margin-top:2px;">👆 代表网络对“美食、搞笑、体育、美妆”的重要性判断</div>
+        </div>
+    </div>
+
+    <!-- 步骤2 -->
+    <div class="input-area">
+        <div class="section-title"><i class="fas fa-bullseye" style="color:#d48c1a;"></i> 步骤2：Attention注意力计算</div>
+        <div style="font-size:13px; color:#4d6f91; margin-bottom:4px;">🎯 候选视频 <span class="demo-tip">V5：🍣 日料大师·刺身</span> 与历史视频算相似度</div>
+        <div class="row">
+            <button class="btn btn-primary" id="attentionBtn"><i class="fas fa-magic"></i> ⚡ 计算Attention权重</button>
+            <button class="btn btn-outline" id="resetAttentionBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+        </div>
+        <div id="attentionDisplay" style="display:none; margin-top:8px;">
+            <div class="highlight-box">
+                <div class="hl-title">⚡ Attention权重（V5 与 历史视频的相似度 + Softmax）：</div>
+                <div class="attention-grid" id="attentionGrid"></div>
+                <div style="margin-top:8px; border-top:1px solid #1a3a5f; padding-top:8px;">
+                    <div style="font-size:13px; color:#b0d4f0;" id="attentionSummary"></div>
+                    <div style="font-size:13px; color:#b0d4f0; margin-top:4px;">
+                        📊 加权聚合兴趣向量：<span id="interestVecDisplay" style="color:#f7d44a;font-weight:600;">[0.53, 0.27, 0.15, 0.05]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 步骤3 -->
+    <div class="input-area">
+        <div class="section-title"><i class="fas fa-chart-line" style="color:#1a8b4c;"></i> 步骤3：多目标预测（DNN打分）</div>
+        <div style="font-size:13px; color:#4d6f91; margin-bottom:4px;">
+            💡 兴趣向量送入DNN → 预测 点击/完播/点赞/转发
+            <span class="filter-note"><i class="fas fa-filter"></i> 已自动过滤你看过或不喜欢的视频</span>
+        </div>
+        <div class="row">
+            <button class="btn btn-success" id="multiTargetBtn"><i class="fas fa-play"></i> 🚀 多目标预测 & 排序</button>
+            <button class="btn btn-outline" id="resetMultiBtn"><i class="fas fa-undo-alt"></i> 重置</button>
+        </div>
+        <div id="multiDisplay" style="display:none; margin-top:8px;">
+            <div class="highlight-box">
+                <div class="hl-title">🎯 每条候选视频的多目标预测分数：</div>
+                <div id="multiTargetList" class="multi-target-grid"></div>
+                <div style="font-size:12px; color:#5a8aaa; margin-top:6px;" id="multiNote"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer"><i class="fas fa-cube"></i> 训练 → 推理 → 可视化</div>
+</div>
+
+<script>
+(function() {
+    // ============================================================
+    // 短视频推荐
+    // ============================================================
+    const allVideos = [
+        { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
+        { id: 'V2', title: '🏀 NBA集锦 · 十佳球', tag: 'sports' },
+        { id: 'V3', title: '🍜 美食探店 · 火锅', tag: 'food' },
+        { id: 'V4', title: '😂 搞笑喵星人合集', tag: 'funny' },
+        { id: 'V5', title: '🍣 日料大师 · 刺身', tag: 'food' },
+        { id: 'V6', title: '🤣 爆笑动物配音', tag: 'funny' },
+        { id: 'V7', title: '🏀 NBA每日集锦', tag: 'sports' },
+        { id: 'V8', title: '💄 新手化妆教程', tag: 'beauty' }
+    ];
+
+    const candidateVideos = [
+        { id: 'C1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
+        { id: 'C2', title: '🍣 日料大师 · 刺身', tag: 'food' },
+        { id: 'C3', title: '😂 搞笑喵星人合集', tag: 'funny' },
+        { id: 'C4', title: '🤣 爆笑动物配音', tag: 'funny' },
+        { id: 'C5', title: '🏀 NBA每日集锦', tag: 'sports' },
+        { id: 'C6', title: '💄 新手化妆教程', tag: 'beauty' }
+    ];
+
+    const tagKeys = ['food', 'funny', 'sports', 'beauty'];
+    const videoEmbMap = {
+        'food': [0.70, 0.20, 0.05, 0.05],
+        'funny': [0.15, 0.70, 0.10, 0.05],
+        'sports': [0.10, 0.10, 0.75, 0.05],
+        'beauty': [0.10, 0.05, 0.05, 0.80]
+    };
+
+    let selections = {};
+    let recWeights = null;
+    let isRecTrained = false;
+    let attentionWeights = null;
+    let interestVec = null;
+    let multiResults = null;
+
+    const recStatusTag = document.getElementById('recStatusTag');
+    const videoGrid = document.getElementById('videoGrid');
+    const selectedCount = document.getElementById('selectedCount');
+    const resetSelectionBtn = document.getElementById('resetSelectionBtn');
+    const recTrainBtn = document.getElementById('recTrainBtn');
+    const recResetTrainBtn = document.getElementById('recResetTrainBtn');
+    const recLayerSlider = document.getElementById('recLayerSlider');
+    const recLayerVal = document.getElementById('recLayerVal');
+    const recLrSlider = document.getElementById('recLrSlider');
+    const recLrVal = document.getElementById('recLrVal');
+    const recTrainLog = document.getElementById('recTrainLog');
+    const recWeightBar = document.getElementById('recWeightBar');
+    const recWeightLabel = document.getElementById('recWeightLabel');
+    const recWeightDisplay = document.getElementById('recWeightDisplay');
+    const recWeightValues = document.getElementById('recWeightValues');
+    const attentionBtn = document.getElementById('attentionBtn');
+    const resetAttentionBtn = document.getElementById('resetAttentionBtn');
+    const attentionDisplay = document.getElementById('attentionDisplay');
+    const attentionGrid = document.getElementById('attentionGrid');
+    const attentionSummary = document.getElementById('attentionSummary');
+    const interestVecDisplay = document.getElementById('interestVecDisplay');
+    const multiTargetBtn = document.getElementById('multiTargetBtn');
+    const resetMultiBtn = document.getElementById('resetMultiBtn');
+    const multiDisplay = document.getElementById('multiDisplay');
+    const multiTargetList = document.getElementById('multiTargetList');
+    const multiNote = document.getElementById('multiNote');
+
+    // 渲染视频卡片
+    function renderVideoGrid() {
+        videoGrid.innerHTML = '';
+        allVideos.forEach(v => {
+            const isSelected = selections[v.id] !== undefined && selections[v.id] !== null;
+            const isLike = selections[v.id] === 'like';
+            const isDislike = selections[v.id] === 'dislike';
+            const card = document.createElement('div');
+            card.className = `video-card ${isSelected ? 'selected' : ''}`;
+            card.innerHTML = `
+                <div class="check">${isSelected ? '✓' : ''}</div>
+                <span class="vtitle">${v.title}</span>
+                <div class="actions">
+                    <button class="like ${isLike ? 'active' : ''}" data-id="${v.id}">👍 喜欢</button>
+                    <button class="dislike ${isDislike ? 'active' : ''}" data-id="${v.id}">👎 不喜欢</button>
+                </div>
+            `;
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.actions')) return;
+                toggleSelection(v.id);
+            });
+            card.querySelectorAll('.actions button').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.dataset.id;
+                    const action = this.classList.contains('like') ? 'like' : 'dislike';
+                    setAction(id, action);
+                });
+            });
+            videoGrid.appendChild(card);
+        });
+        updateSelectedCount();
+    }
+
+    function toggleSelection(id) {
+        if (selections[id] === undefined || selections[id] === null) {
+            selections[id] = 'like';
+        } else {
+            selections[id] = null;
+        }
+        clearAllResults();
+        renderVideoGrid();
+    }
+
+    function setAction(id, action) {
+        if (selections[id] === action) {
+            selections[id] = null;
+        } else {
+            selections[id] = action;
+        }
+        clearAllResults();
+        renderVideoGrid();
+    }
+
+    function updateSelectedCount() {
+        const count = Object.values(selections).filter(v => v !== null).length;
+        selectedCount.textContent = `已选 ${count} 个视频`;
+    }
+
+    function clearAllResults() {
+        attentionWeights = null;
+        interestVec = null;
+        multiResults = null;
+        attentionDisplay.style.display = 'none';
+        multiDisplay.style.display = 'none';
+        if (!isRecTrained) {
+            recStatusTag.textContent = '⏳ 未训练';
+            recStatusTag.className = 'status-tag';
+        }
+    }
+
+    // 训练
+    recTrainBtn.addEventListener('click', function() {
+        const selected = Object.entries(selections).filter(([id, val]) => val !== null);
+        if (selected.length < 2) {
+            alert('请至少选择 2 个视频并评价（喜欢/不喜欢）！');
+            return;
+        }
+        const target = { food: 0, funny: 0, sports: 0, beauty: 0 };
+        let total = 0;
+        selected.forEach(([id, val]) => {
+            const video = allVideos.find(v => v.id === id);
+            if (!video) return;
+            const weight = val === 'like' ? 1.0 : 0.1;
+            target[video.tag] += weight;
+            total += weight;
+        });
+        if (total === 0) { alert('请至少选择一个喜欢的视频！'); return; }
+        Object.keys(target).forEach(k => target[k] = Math.max(0.05, target[k] / total));
+        const sum = Object.values(target).reduce((a, b) => a + b, 0);
+        Object.keys(target).forEach(k => target[k] /= sum);
+
+        recTrainBtn.disabled = true;
+        recTrainBtn.textContent = '⏳ 训练中...';
+        recTrainLog.innerHTML = '<div class="info">🧠 开始训练推荐网络...</div>';
+        recWeightDisplay.style.display = 'none';
+        clearAllResults();
+
+        const lr = parseInt(recLrSlider.value) / 10;
+        const epochs = 5;
+        let logLines = [];
+        let weights = Array.from({ length: 4 }, () => Math.random() * 0.6 + 0.2);
+        let step = 0;
+
+        const interval = setInterval(() => {
+            if (step >= epochs) {
+                clearInterval(interval);
+                recWeights = weights.slice();
+                isRecTrained = true;
+                recTrainBtn.disabled = false;
+                recTrainBtn.textContent = '🚀 开始训练';
+                const wStr = recWeights.map(w => w.toFixed(2)).join(', ');
+                recWeightValues.textContent = '[' + wStr + ']';
+                recWeightDisplay.style.display = 'block';
+                recTrainLog.innerHTML += `<div class="ok">✅ 训练完成！网络权重已更新</div>`;
+                recTrainLog.innerHTML += `<div class="info">💡 权重已固定，后续推理不会修改权重</div>`;
+                recTrainLog.innerHTML += `<div class="gold">📊 最终权重值： [${wStr}]</div>`;
+                recWeightBar.style.width = '100%';
+                recWeightLabel.textContent = '100%';
+                return;
+            }
+            const pred = tagKeys.map((k, idx) => weights[idx] * (target[k] + 0.1));
+            const norm = pred.reduce((a, b) => a + b, 0) || 1;
+            const predNorm = pred.map(p => p / norm);
+            const targetArr = tagKeys.map(k => target[k]);
+            let loss = 0;
+            for (let i = 0; i < 4; i++) {
+                loss += Math.pow(predNorm[i] - targetArr[i], 2);
+            }
+            loss /= 4;
+            for (let i = 0; i < 4; i++) {
+                const grad = 2 * (predNorm[i] - targetArr[i]);
+                weights[i] = Math.max(0.05, Math.min(1.5, weights[i] - lr * grad * 0.5));
+            }
+            const progress = Math.min(100, ((step + 1) / epochs) * 100);
+            recWeightBar.style.width = progress + '%';
+            recWeightLabel.textContent = Math.round(progress) + '%';
+            const status = loss < 0.1 ? '✅ 收敛中' : '🔄 调整中';
+            logLines.push(`轮次 ${step+1}: 预测兴趣 [${weights.map(w=>w.toFixed(2)).join(', ')}] 误差=${loss.toFixed(3)} ${status}`);
+            if (logLines.length > 4) logLines.shift();
+            recTrainLog.innerHTML = logLines.map(l => `<div class="${loss < 0.1 ? 'ok' : 'info'}">${l}</div>`).join('');
+            recTrainLog.scrollTop = recTrainLog.scrollHeight;
+            step++;
+        }, 500);
+    });
+
+    recResetTrainBtn.addEventListener('click', function() {
+        recWeights = null;
+        isRecTrained = false;
+        recTrainLog.innerHTML = '<div class="info">⏳ 等待训练...</div>';
+        recWeightBar.style.width = '5%';
+        recWeightLabel.textContent = '5%';
+        recWeightDisplay.style.display = 'none';
+        recTrainBtn.disabled = false;
+        recTrainBtn.textContent = '🚀 开始训练';
+        clearAllResults();
+    });
+
+    // Attention
+    attentionBtn.addEventListener('click', function() {
+        if (!isRecTrained || !recWeights) {
+            alert('请先完成训练！（点击「开始训练」）');
+            return;
+        }
+        const selected = Object.entries(selections).filter(([id, val]) => val !== null);
+        if (selected.length < 2) {
+            alert('请至少选择 2 个视频并评价！');
+            return;
+        }
+
+        const historyVideos = [];
+        for (let [id, val] of selected) {
+            const v = allVideos.find(v => v.id === id);
+            if (v) historyVideos.push(v);
+            if (historyVideos.length >= 4) break;
+        }
+        if (historyVideos.length < 2) {
+            alert('请至少选择 2 个视频作为历史！');
+            return;
+        }
+
+        const candidate = allVideos.find(v => v.id === 'V5');
+        if (!candidate) { alert('候选视频V5不存在！'); return; }
+        const candidateVec = videoEmbMap[candidate.tag] || videoEmbMap['food'];
+
+        const historyVecs = historyVideos.map(h => videoEmbMap[h.tag] || videoEmbMap['food']);
+        const rawScores = historyVecs.map(hv => {
+            let sum = 0;
+            for (let i = 0; i < 4; i++) sum += candidateVec[i] * hv[i];
+            return sum;
+        });
+
+        const expScores = rawScores.map(s => Math.exp(s * 2.5));
+        const sumExp = expScores.reduce((a, b) => a + b, 0);
+        const attnWeights = expScores.map(e => e / sumExp);
+        attentionWeights = attnWeights;
+
+        interestVec = [0, 0, 0, 0];
+        for (let i = 0; i < historyVideos.length; i++) {
+            for (let j = 0; j < 4; j++) {
+                interestVec[j] += attnWeights[i] * historyVecs[i][j];
+            }
+        }
+
+        attentionDisplay.style.display = 'block';
+        attentionGrid.innerHTML = historyVideos.map((h, idx) => {
+            const pct = (attnWeights[idx] * 100).toFixed(0);
+            const simPct = (rawScores[idx] * 100).toFixed(0);
+            const isHigh = attnWeights[idx] > 0.25;
+            const color = isHigh ? '#7ddf9a' : '#5a8aaa';
+            return `<div class="attention-row">
+                <span class="label">${h.id}</span>
+                <span style="color:#b0d4f0; font-size:12px; min-width:60px;">${h.title.slice(0,10)}</span>
+                <span style="color:#8ab8e6; font-size:11px;">相似度 ${simPct}%</span>
+                <div class="wbar"><div class="fill" style="width:${pct}%; background:${color};"></div></div>
+                <span class="wnum">${pct}%</span>
+                <span style="font-size:11px; color:${isHigh ? '#7ddf9a' : '#5a8aaa'}; min-width:40px;">${isHigh ? '✅ 相关' : '❌ 弱'}</span>
+            </div>`;
+        }).join('');
+
+        const maxIdx = attnWeights.indexOf(Math.max(...attnWeights));
+        attentionSummary.innerHTML = `📌 V5（日料·刺身）与历史中最相关的是 <strong style="color:#f7d44a;">${historyVideos[maxIdx].id}（${historyVideos[maxIdx].title}）</strong>，注意力权重 <strong style="color:#f7d44a;">${(attnWeights[maxIdx]*100).toFixed(0)}%</strong>`;
+        interestVecDisplay.textContent = `[${interestVec.map(v => v.toFixed(2)).join(', ')}]`;
+    });
+
+    resetAttentionBtn.addEventListener('click', function() {
+        attentionWeights = null;
+        interestVec = null;
+        multiResults = null;
+        attentionDisplay.style.display = 'none';
+        multiDisplay.style.display = 'none';
+    });
+
+    // 多目标预测
+    multiTargetBtn.addEventListener('click', function() {
+        if (!isRecTrained || !recWeights) {
+            alert('请先完成训练！（点击「开始训练」）');
+            return;
+        }
+        if (!interestVec) {
+            alert('请先点击「计算Attention权重」！');
+            return;
+        }
+
+        const selectedEntries = Object.entries(selections).filter(([id, val]) => val !== null);
+        const selectedTitles = selectedEntries.map(([id]) => {
+            const v = allVideos.find(v => v.id === id);
+            return v ? v.title : '';
+        }).filter(t => t !== '');
+
+        // 不喜欢关键词硬过滤
+        const dislikeKeywords = [];
+        selectedEntries.forEach(([id, val]) => {
+            if (val === 'dislike') {
+                const v = allVideos.find(v => v.id === id);
+                if (v) {
+                    const cleanTitle = v.title.replace(/[🍜🏀😂🤣💄]/g, '').trim();
+                    const parts = cleanTitle.split('·');
+                    if (parts.length > 1) {
+                        dislikeKeywords.push(parts[1].trim());
+                    } else {
+                        dislikeKeywords.push(cleanTitle);
+                    }
+                }
+            }
+        });
+
+        const filteredCandidates = candidateVideos.filter(v => {
+            if (selectedTitles.some(title => title === v.title)) return false;
+            for (let kw of dislikeKeywords) {
+                if (v.title.includes(kw)) return false;
+            }
+            return true;
+        });
+
+        if (filteredCandidates.length === 0) {
+            alert('所有候选视频你都看过了（或不喜欢的同类内容已被过滤）！请重置选择。');
+            return;
+        }
+
+        const scored = filteredCandidates.map(v => {
+            const vEmb = videoEmbMap[v.tag] || videoEmbMap['food'];
+            let sim = 0;
+            tagKeys.forEach((k, idx) => {
+                if (interestVec[idx] !== undefined && vEmb[idx] !== undefined) {
+                    sim += interestVec[idx] * vEmb[idx];
+                }
+            });
+            sim = Math.max(0.01, Math.min(1.0, sim));
+
+            const weightFactor = recWeights.reduce((a, b) => a + b, 0) / recWeights.length;
+            const click = Math.min(0.98, Math.max(0.01, sim * 1.3 + 0.05 + Math.random() * 0.04));
+            const finish = Math.min(0.98, Math.max(0.01, click * 0.9 + 0.08 + Math.random() * 0.04));
+            const like = Math.min(0.98, Math.max(0.01, click * 0.7 + 0.1 + Math.random() * 0.04));
+            const share = Math.min(0.98, Math.max(0.01, click * 0.5 + 0.05 + Math.random() * 0.04));
+            const finalScore = (click * 0.4 + finish * 0.3 + like * 0.2 + share * 0.1);
+            return {
+                ...v,
+                click,
+                finish,
+                like,
+                share,
+                finalScore: Math.round(Math.max(0, Math.min(100, finalScore * 100)))
+            };
+        });
+
+        scored.sort((a, b) => b.finalScore - a.finalScore);
+        multiResults = scored;
+
+        multiDisplay.style.display = 'block';
+        multiTargetList.innerHTML = scored.map((item, idx) => {
+            const isTop = idx === 0;
+            return `<div class="multi-target-row ${isTop ? 'top' : ''}">
+                <span class="rank">#${idx + 1}</span>
+                <span class="title">${item.title}</span>
+                <div class="targets">
+                    <span class="${item.click > 0.5 ? 'high' : ''}">点击${(item.click*100).toFixed(0)}%</span>
+                    <span class="${item.finish > 0.5 ? 'high' : ''}">完播${(item.finish*100).toFixed(0)}%</span>
+                    <span class="${item.like > 0.5 ? 'high' : ''}">点赞${(item.like*100).toFixed(0)}%</span>
+                    <span class="${item.share > 0.5 ? 'high' : ''}">转发${(item.share*100).toFixed(0)}%</span>
+                </div>
+                <span class="final-score ${isTop ? 'high' : ''}">${item.finalScore}%</span>
+            </div>`;
+        }).join('');
+
+        const totalCandidates = candidateVideos.length;
+        const removedCount = totalCandidates - filteredCandidates.length;
+        const removedMsg = removedCount > 0 ?
+            `（已过滤 ${removedCount} 个你看过或不喜欢的视频，从 ${totalCandidates} 个候选中筛选出 ${filteredCandidates.length} 个）` :
+            `（${filteredCandidates.length} 个候选视频均为你没看过的）`;
+
+        multiNote.textContent = `🏆 给你的推荐：${scored[0].title} 综合得分最高（${scored[0].finalScore}%），排在第一位！ ${removedMsg}`;
+    });
+
+    resetMultiBtn.addEventListener('click', function() {
+        multiResults = null;
+        multiDisplay.style.display = 'none';
+    });
+
+    resetSelectionBtn.addEventListener('click', function() {
+        selections = {};
+        clearAllResults();
+        renderVideoGrid();
+    });
+
+    // 初始化
+    renderVideoGrid();
+    recLrSlider.addEventListener('input', function() {
+        recLrVal.textContent = (parseInt(this.value) / 10).toFixed(1);
+    });
+    recLayerSlider.addEventListener('input', function() {
+        recLayerVal.textContent = this.value;
+    });
+})();
+</script>
+</body>
+</html>
