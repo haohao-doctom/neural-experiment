@@ -58,19 +58,20 @@
         .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; }
         .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
 
-        /* 神经网络结构图 */
+        /* 神经网络结构图 - 强化可见性 */
         .network-viz {
             background: #0a1a2f;
             border-radius: 16px;
             padding: 16px 18px;
-            margin-top: 10px;
-            border: 1px solid #1a3a5f;
+            margin: 12px 0;
+            border: 2px solid #2a4a6a;
+            display: block !important;
         }
         .network-viz .viz-title {
             color: #8ab8e6;
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
         }
         .network-viz .layer-area {
             border-radius: 10px;
@@ -209,7 +210,7 @@
         <div class="thumbnails" id="thumbnails"></div>
     </div>
 
-    <!-- 神经网络结构图 -->
+    <!-- ★★★ 神经网络结构图 - 独立可见 ★★★ -->
     <div class="network-viz" id="networkViz">
         <div class="viz-title">🧠 神经网络内部结构</div>
         <div class="control-area">
