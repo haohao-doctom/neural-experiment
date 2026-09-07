@@ -31,7 +31,6 @@
         .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 10px; margin-top: 6px; }
         .file-upload { background: white; border: 1px solid #ccdcee; border-radius: 60px; padding: 6px 18px 6px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1 1 160px; }
         .file-upload:hover { background: #edf4fe; }
-        .file-upload input { display: none; }
         .training-log { background: #0a1a2f; color: #b0d4f0; border-radius: 16px; padding: 14px 18px; font-family: monospace; font-size: 13px; max-height: 150px; overflow-y: auto; margin-top: 10px; line-height: 1.7; }
         .training-log .ok { color: #7ddf9a; }
         .training-log .info { color: #8ab8e6; }
@@ -74,16 +73,11 @@
     <div class="input-area">
         <div class="section-title"><i class="fas fa-database"></i> 步骤0：准备训练数据集</div>
         <div class="row">
-            <div class="file-upload" onclick="document.getElementById('trainUpload').click();">
-                <i class="fas fa-upload"></i> 添加训练照片
-                <input type="file" accept="image/*" id="trainUpload" multiple style="display:none;">
-                <span style="margin-left:auto; font-size:12px; color:#4b6f92;" id="trainCount">0 张</span>
-            </div>
-            <input type="text" id="labelInput" placeholder="输入标签（如：张三）" style="border:1px solid #ccdcee; border-radius:60px; padding:6px 16px; font-size:14px; flex:0 1 140px;">
-            <button class="btn btn-outline" id="addLabelBtn" style="font-size:12px;"><i class="fas fa-tag"></i> 添加标签</button>
-            <button class="btn btn-outline" id="clearBtn" style="font-size:12px;"><i class="fas fa-trash"></i> 清空</button>
+            <button class="btn btn-primary" id="addTrainBtn"><i class="fas fa-plus"></i> 📤 添加训练照片</button>
+            <button class="btn btn-outline" id="clearBtn" style="font-size:12px;"><i class="fas fa-trash"></i> 清空全部</button>
+            <span style="font-size:13px; color:#4d6f91; margin-left:4px;" id="trainCount">已添加 0 张</span>
         </div>
-        <div style="font-size:13px; color:#3a6a8a; margin-top:4px;" id="trainInfo">💡 点击「添加训练照片」多选照片，然后输入标签</div>
+        <div style="font-size:13px; color:#3a6a8a; margin-top:4px;" id="trainInfo">💡 点击按钮 → 多选照片 → 输入标签（如：张三）</div>
         <div class="label-group" id="labelGroup"></div>
         <div class="thumbnails" id="thumbnails"></div>
     </div>
@@ -146,11 +140,9 @@
     // ============================================================
     // 人脸识别模块
     // ============================================================
-    const trainUpload = document.getElementById('trainUpload');
-    const trainCount = document.getElementById('trainCount');
-    const labelInput = document.getElementById('labelInput');
-    const addLabelBtn = document.getElementById('addLabelBtn');
+    const addTrainBtn = document.getElementById('addTrainBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const trainCount = document.getElementById('trainCount');
     const trainInfo = document.getElementById('trainInfo');
     const labelGroup = document.getElementById('labelGroup');
     const thumbnails = document.getElementById('thumbnails');
@@ -183,26 +175,35 @@
         lrVal.textContent = (parseInt(this.value) / 10).toFixed(1);
     });
 
-    // 添加训练照片（支持多选 + 标签）
-    addLabelBtn.addEventListener('click', function() {
-        trainUpload.click();
-    });
-
-    trainUpload.addEventListener('change', function(e) {
-        const files = this.files;
-        if (!files || files.length === 0) return;
-        const label = labelInput.value.trim() || '未命名';
-        let loaded = 0;
-        for (let f of files) {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                trainData.push({ name: f.name, label: label, dataURL: ev.target.result });
-                loaded++;
-                if (loaded === files.length) { updateUI(); }
-            };
-            reader.readAsDataURL(f);
-        }
-        this.value = '';
+    // ★★★ 核心修复：用验证成功的方式添加训练照片 ★★★
+    addTrainBtn.addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = true;
+        input.onchange = function(e) {
+            const files = this.files;
+            if (!files || files.length === 0) return;
+            const label = prompt('请输入这 ' + files.length + ' 张照片的标签（如：张三、李四）：', '张三');
+            if (!label || label.trim() === '') {
+                alert('标签不能为空！');
+                return;
+            }
+            const trimmedLabel = label.trim();
+            let loaded = 0;
+            for (let f of files) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    trainData.push({ name: f.name, label: trimmedLabel, dataURL: ev.target.result });
+                    loaded++;
+                    if (loaded === files.length) {
+                        updateUI();
+                    }
+                };
+                reader.readAsDataURL(f);
+            }
+        };
+        input.click();
     });
 
     clearBtn.addEventListener('click', function() {
@@ -231,10 +232,10 @@
     });
 
     function updateUI() {
-        trainCount.textContent = trainData.length + ' 张';
+        trainCount.textContent = '已添加 ' + trainData.length + ' 张';
         const labels = [...new Set(trainData.map(d => d.label))];
         if (trainData.length === 0) {
-            trainInfo.textContent = '💡 点击「添加训练照片」多选照片，然后输入标签';
+            trainInfo.textContent = '💡 点击按钮 → 多选照片 → 输入标签（如：张三）';
             labelGroup.innerHTML = '';
             thumbnails.innerHTML = '';
             trainSample.innerHTML = '<div class="placeholder">训练后显示</div>';
@@ -254,7 +255,6 @@
 
     // 训练
     trainBtn.addEventListener('click', function() {
-        // 防止重复点击
         if (isTraining) return;
         if (trainData.length < 2) {
             alert('至少需要2张训练照片！');
@@ -323,7 +323,6 @@
     });
 
     resetTrainBtn.addEventListener('click', function() {
-        // 如果正在训练，停止训练
         isTraining = false;
         trainData = [];
         trainedWeights = null;
