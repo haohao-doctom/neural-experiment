@@ -57,6 +57,133 @@
         .footer { text-align: center; margin-top: 24px; color: #5b7999; font-size: 13px; border-top: 1px solid #e2ecf7; padding-top: 18px; }
         .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; }
         .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
+
+        /* 神经网络结构图 */
+        .network-viz {
+            background: #0a1a2f;
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin-top: 10px;
+            border: 1px solid #1a3a5f;
+        }
+        .network-viz .viz-title {
+            color: #8ab8e6;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .network-viz .layer-area {
+            border-radius: 10px;
+            padding: 8px 4px;
+        }
+        .network-viz .layer-row {
+            display: flex;
+            gap: 6px;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+        .network-viz .layer-box {
+            flex: 1;
+            min-width: 54px;
+            background: #142a44;
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            border: 2px solid #1a3a5f;
+            transition: all 0.3s;
+        }
+        .network-viz .layer-box.done {
+            border-color: #7ddf9a;
+            background: #1a4a3a;
+        }
+        .network-viz .layer-box .layer-name {
+            font-size: 11px;
+            color: #8ab8e6;
+            font-weight: 600;
+        }
+        .network-viz .layer-box .layer-sub {
+            font-size: 10px;
+            color: #5a8aaa;
+            margin-top: 2px;
+        }
+        .network-viz .layer-box .layer-status {
+            font-size: 10px;
+            margin-top: 4px;
+            color: #5a8aaa;
+        }
+        .network-viz .layer-box .layer-status.done { color: #7ddf9a; }
+        .network-viz .arrow-symbol {
+            color: #3a5a7a;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            padding: 0 2px;
+        }
+        .network-viz .layer-box.hidden-layer {
+            display: none;
+        }
+        .network-viz .layer-box.hidden-layer.show {
+            display: block;
+        }
+        .layer-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .layer-slider-row label {
+            font-size: 13px;
+            color: #8ab8e6;
+            font-weight: 500;
+        }
+        .layer-slider-row input[type=range] {
+            flex: 1;
+            min-width: 100px;
+            max-width: 200px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #1a3a5f;
+            border-radius: 4px;
+        }
+        .layer-slider-row input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #f7d44a;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .layer-slider-row .layer-count {
+            color: #f7d44a;
+            font-weight: bold;
+            font-size: 15px;
+            min-width: 20px;
+            text-align: center;
+        }
+        .ctrl-hint {
+            font-size: 11px;
+            color: #5a8aaa;
+            margin-left: 6px;
+        }
+        .control-area {
+            background: #0f2440;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            border: 1px solid #1a3a5f;
+        }
+        .ctrl-label {
+            font-size: 12px;
+            color: #6a9ac0;
+            margin-right: 10px;
+        }
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -80,6 +207,52 @@
         <div style="font-size:13px; color:#3a6a8a; margin-top:4px;" id="trainInfo">💡 点击按钮 → 多选照片 → 输入标签（如：张三）</div>
         <div class="label-group" id="labelGroup"></div>
         <div class="thumbnails" id="thumbnails"></div>
+    </div>
+
+    <!-- 神经网络结构图 -->
+    <div class="network-viz" id="networkViz">
+        <div class="viz-title">🧠 神经网络内部结构</div>
+        <div class="control-area">
+            <div class="control-row">
+                <span class="ctrl-label"><i class="fas fa-sliders-h"></i> 隐藏层数：</span>
+                <input type="range" min="1" max="3" value="3" id="layerCountSlider">
+                <span class="layer-count" id="layerCountDisplay">3</span>
+                <span class="ctrl-hint">拖动控制下方层数</span>
+            </div>
+        </div>
+        <div class="layer-area">
+            <div class="layer-row" id="layerRow">
+                <div class="layer-box done" id="inputLayer">
+                    <div class="layer-name">📥 输入层</div>
+                    <div class="layer-sub">(像素)</div>
+                    <div class="layer-status done">✅ 已就绪</div>
+                </div>
+                <div class="arrow-symbol">→</div>
+                <div class="layer-box hidden-layer show" id="hiddenLayer1">
+                    <div class="layer-name">🔍 隐藏层1</div>
+                    <div class="layer-sub">(线条)</div>
+                    <div class="layer-status" id="h1Status">⏳ 等待</div>
+                </div>
+                <div class="arrow-symbol">→</div>
+                <div class="layer-box hidden-layer show" id="hiddenLayer2">
+                    <div class="layer-name">🔍 隐藏层2</div>
+                    <div class="layer-sub">(五官)</div>
+                    <div class="layer-status" id="h2Status">⏳ 等待</div>
+                </div>
+                <div class="arrow-symbol">→</div>
+                <div class="layer-box hidden-layer show" id="hiddenLayer3">
+                    <div class="layer-name">🔍 隐藏层3</div>
+                    <div class="layer-sub">(脸谱)</div>
+                    <div class="layer-status" id="h3Status">⏳ 等待</div>
+                </div>
+                <div class="arrow-symbol">→</div>
+                <div class="layer-box" id="outputLayer">
+                    <div class="layer-name">📤 输出层</div>
+                    <div class="layer-sub">(判断)</div>
+                    <div class="layer-status" id="outputStatus">⏳ 等待</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 步骤1 -->
@@ -166,10 +339,101 @@
     const resultConfidence = document.getElementById('resultConfidence');
     const resultNote = document.getElementById('resultNote');
 
+    // 隐藏层控制
+    const layerCountSlider = document.getElementById('layerCountSlider');
+    const layerCountDisplay = document.getElementById('layerCountDisplay');
+    const hiddenLayer1 = document.getElementById('hiddenLayer1');
+    const hiddenLayer2 = document.getElementById('hiddenLayer2');
+    const hiddenLayer3 = document.getElementById('hiddenLayer3');
+    const h1Status = document.getElementById('h1Status');
+    const h2Status = document.getElementById('h2Status');
+    const h3Status = document.getElementById('h3Status');
+    const outputStatus = document.getElementById('outputStatus');
+    const inputLayer = document.getElementById('inputLayer');
+    const outputLayer = document.getElementById('outputLayer');
+
     let trainData = [];
     let trainedWeights = null;
     let isTrained = false;
     let isTraining = false;
+
+    // 隐藏层控制函数
+    function updateLayerVisibility(count) {
+        const countNum = parseInt(count);
+        layerCountDisplay.textContent = countNum;
+        hiddenLayer1.classList.toggle('show', countNum >= 1);
+        hiddenLayer2.classList.toggle('show', countNum >= 2);
+        hiddenLayer3.classList.toggle('show', countNum >= 3);
+        if (countNum >= 1) h1Status.textContent = '⏳ 等待';
+        if (countNum >= 2) h2Status.textContent = '⏳ 等待';
+        if (countNum >= 3) h3Status.textContent = '⏳ 等待';
+    }
+
+    layerCountSlider.addEventListener('input', function() {
+        updateLayerVisibility(this.value);
+    });
+
+    function resetLayerStatus() {
+        const count = parseInt(layerCountSlider.value);
+        h1Status.textContent = count >= 1 ? '⏳ 等待' : '';
+        h1Status.className = 'layer-status';
+        h2Status.textContent = count >= 2 ? '⏳ 等待' : '';
+        h2Status.className = 'layer-status';
+        h3Status.textContent = count >= 3 ? '⏳ 等待' : '';
+        h3Status.className = 'layer-status';
+        outputStatus.textContent = '⏳ 等待';
+        outputStatus.className = 'layer-status';
+        inputLayer.className = 'layer-box';
+        outputLayer.className = 'layer-box';
+        hiddenLayer1.className = 'layer-box hidden-layer show';
+        hiddenLayer2.className = 'layer-box hidden-layer show';
+        hiddenLayer3.className = 'layer-box hidden-layer show';
+        updateLayerVisibility(layerCountSlider.value);
+    }
+
+    // 激活层动画
+    function activateLayer(layerNum) {
+        const layerCount = parseInt(layerCountSlider.value);
+        const layers = [
+            { el: inputLayer, status: null },
+            { el: hiddenLayer1, status: h1Status },
+            { el: hiddenLayer2, status: h2Status },
+            { el: hiddenLayer3, status: h3Status },
+            { el: outputLayer, status: outputStatus }
+        ];
+        layers.forEach((l, idx) => {
+            if (idx === 0) {
+                l.el.className = 'layer-box';
+            } else if (idx <= layerCount) {
+                l.el.className = 'layer-box hidden-layer show';
+            } else {
+                l.el.className = 'layer-box hidden-layer';
+            }
+            if (l.status) {
+                l.status.textContent = '⏳ 等待';
+                l.status.className = 'layer-status';
+            }
+        });
+        for (let i = 0; i <= Math.min(layerNum, layerCount + 1); i++) {
+            const l = layers[i];
+            if (i === 0) {
+                l.el.className = 'layer-box done';
+            } else if (i <= layerCount) {
+                l.el.className = 'layer-box hidden-layer show done';
+                if (l.status) {
+                    l.status.textContent = '✅ 已提取';
+                    l.status.className = 'layer-status done';
+                }
+            } else if (i === layerCount + 1) {
+                l.el.className = 'layer-box done';
+                if (l.status) {
+                    l.status.textContent = '✅ 已判断';
+                    l.status.className = 'layer-status done';
+                }
+            }
+        }
+        updateLayerVisibility(layerCount);
+    }
 
     lrSlider.addEventListener('input', function() {
         lrVal.textContent = (parseInt(this.value) / 10).toFixed(1);
@@ -228,6 +492,7 @@
             faceStatusTag.className = 'status-tag';
             trainBtn.disabled = false;
             trainBtn.textContent = '🚀 开始训练';
+            resetLayerStatus();
         }
     });
 
@@ -271,9 +536,11 @@
         trainBtn.textContent = '⏳ 训练中...';
         trainLog.innerHTML = '<div class="info">🧠 开始训练...</div>';
         weightDisplay.style.display = 'none';
+        resetLayerStatus();
 
         const lr = parseInt(lrSlider.value) / 10;
         const epochs = 5;
+        const layerCount = parseInt(layerCountSlider.value);
         let weights = Array.from({ length: trainData.length }, () => Math.random() * 0.5 + 0.25);
         let step = 0;
         let logLines = [];
@@ -291,6 +558,7 @@
                 const wStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
                 weightValues.textContent = '[' + wStr + ']';
                 weightDisplay.style.display = 'block';
+                activateLayer(layerCount + 1);
                 trainLog.innerHTML += `<div class="ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
                 trainLog.innerHTML += `<div class="info">💡 权重已固定，后续推理不会修改权重</div>`;
                 trainLog.innerHTML += `<div class="gold">📊 最终权重值： [${wStr}]</div>`;
@@ -299,6 +567,9 @@
                 resultNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
                 return;
             }
+
+            // 激活当前层
+            activateLayer(step + 1);
 
             let totalLoss = 0;
             for (let i = 0; i < trainData.length; i++) {
@@ -343,6 +614,7 @@
         resultNote.textContent = '💡 请先完成训练，再进行推理';
         faceStatusTag.textContent = '⏳ 未训练';
         faceStatusTag.className = 'status-tag';
+        resetLayerStatus();
     });
 
     // 推理
@@ -380,6 +652,10 @@
         resultLabel.textContent = isMatch ? `✅ ${randomLabel}（匹配）` : '❌ 不匹配（外来人员）';
         resultLabel.style.color = isMatch ? '#1a8b4c' : '#b02a1a';
         resultConfidence.textContent = `置信度 ${Math.round(conf * 100)}%`;
+        // 激活输出层
+        outputStatus.textContent = '✅ 已判断';
+        outputStatus.className = 'layer-status done';
+        outputLayer.className = 'layer-box done';
     });
 
     inferResetBtn.addEventListener('click', function() {
@@ -390,10 +666,13 @@
         resultLabel.textContent = '等待推理';
         resultLabel.style.color = '#0a2647';
         resultConfidence.textContent = '置信度 --%';
+        resetLayerStatus();
     });
 
     // 初始化
     updateUI();
+    resetLayerStatus();
+    updateLayerVisibility(layerCountSlider.value);
 })();
 </script>
 </body>
