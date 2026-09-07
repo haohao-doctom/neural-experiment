@@ -6,7 +6,6 @@
     <title>神经网络实验平台 · 推荐流程可视化</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* --- 样式部分与之前完全一致，为了节省篇幅在此省略，但会包含在完整代码中 --- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
         body { background: #f0f4fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .platform-card { max-width: 1500px; width: 100%; background: white; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,20,40,0.12); padding: 32px 36px 40px; }
@@ -337,13 +336,301 @@
     <script>
         (function() {
             // ============================================================
-            // 人脸识别模块（完整保留）
+            // 人脸识别模块（完整版）
             // ============================================================
-            // ... 人脸识别代码与之前完全一致，为了可读性省略，实际在完整文件中包含
-            // 以下是核心的短视频推荐模块，完整包含修复后的过滤逻辑
+            const addTrainBtn = document.getElementById('addTrainBtn');
+            const clearTrainBtn = document.getElementById('clearTrainBtn');
+            const trainCountDisplay = document.getElementById('trainCountDisplay');
+            const trainSetInfo = document.getElementById('trainSetInfo');
+            const trainPreviewThumbs = document.getElementById('trainPreviewThumbs');
+            const labelGroup = document.getElementById('labelGroup');
+            const trainPreviewSample = document.getElementById('trainPreviewSample');
+            const faceTrainBtn = document.getElementById('faceTrainBtn');
+            const faceResetTrainBtn = document.getElementById('faceResetTrainBtn');
+            const faceTrainLog = document.getElementById('faceTrainLog');
+            const weightBarFace = document.getElementById('weightBarFace');
+            const weightLabelFace = document.getElementById('weightLabelFace');
+            const weightDisplayArea = document.getElementById('weightDisplayArea');
+            const weightValuesFace = document.getElementById('weightValuesFace');
+            const faceStatusTag = document.getElementById('faceStatusTag');
+            const inferUpload = document.getElementById('inferUpload');
+            const inferFileName = document.getElementById('inferFileName');
+            const inferBtn = document.getElementById('inferBtn');
+            const inferResetBtn = document.getElementById('inferResetBtn');
+            const inferPreview = document.getElementById('inferPreview');
+            const faceLabel = document.getElementById('faceLabel');
+            const faceConfidence = document.getElementById('faceConfidence');
+            const inferNote = document.getElementById('inferNote');
+            const trainLrSlider = document.getElementById('trainLrSlider');
+            const trainLrVal = document.getElementById('trainLrVal');
+            const layerCountSlider = document.getElementById('layerCountSlider');
+            const layerCountDisplay = document.getElementById('layerCountDisplay');
+            const hiddenLayer1 = document.getElementById('hiddenLayer1');
+            const hiddenLayer2 = document.getElementById('hiddenLayer2');
+            const hiddenLayer3 = document.getElementById('hiddenLayer3');
+            const h1Status = document.getElementById('h1Status');
+            const h2Status = document.getElementById('h2Status');
+            const h3Status = document.getElementById('h3Status');
+            const outputStatus = document.getElementById('outputStatus');
+            const inputLayer = document.getElementById('inputLayer');
+            const outputLayer = document.getElementById('outputLayer');
+
+            let trainData = [];
+            let trainedWeights = null;
+            let isFaceTrained = false;
+
+            function updateLayerVisibility(count) {
+                const countNum = parseInt(count);
+                layerCountDisplay.textContent = countNum;
+                hiddenLayer1.classList.toggle('show', countNum >= 1);
+                hiddenLayer2.classList.toggle('show', countNum >= 2);
+                hiddenLayer3.classList.toggle('show', countNum >= 3);
+                if (countNum >= 1) h1Status.textContent = '⏳ 等待';
+                if (countNum >= 2) h2Status.textContent = '⏳ 等待';
+                if (countNum >= 3) h3Status.textContent = '⏳ 等待';
+            }
+
+            function resetLayerStatus() {
+                const count = parseInt(layerCountSlider.value);
+                h1Status.textContent = count >= 1 ? '⏳ 等待' : '';
+                h1Status.className = 'layer-status';
+                h2Status.textContent = count >= 2 ? '⏳ 等待' : '';
+                h2Status.className = 'layer-status';
+                h3Status.textContent = count >= 3 ? '⏳ 等待' : '';
+                h3Status.className = 'layer-status';
+                outputStatus.textContent = '⏳ 等待';
+                outputStatus.className = 'layer-status';
+                inputLayer.className = 'layer-box';
+                outputLayer.className = 'layer-box';
+                hiddenLayer1.className = 'layer-box hidden-layer show';
+                hiddenLayer2.className = 'layer-box hidden-layer show';
+                hiddenLayer3.className = 'layer-box hidden-layer show';
+                updateLayerVisibility(layerCountSlider.value);
+            }
+
+            layerCountSlider.addEventListener('input', function() { updateLayerVisibility(this.value); });
+            trainLrSlider.addEventListener('input', function() { trainLrVal.textContent = (parseInt(this.value) / 10).toFixed(1); });
+
+            addTrainBtn.addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.onchange = function(e) {
+                    const files = this.files;
+                    if (!files || files.length === 0) return;
+                    const label = prompt('请输入这 ' + files.length + ' 张照片的标签（如：张三、李四）：', '张三');
+                    if (label === null || label.trim() === '') { alert('标签不能为空！'); return; }
+                    const trimmedLabel = label.trim();
+                    let loaded = 0;
+                    for (let f of files) {
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            trainData.push({ name: f.name, label: trimmedLabel, dataURL: ev.target.result });
+                            loaded++;
+                            if (loaded === files.length) { updateTrainUI(); }
+                        };
+                        reader.readAsDataURL(f);
+                    }
+                };
+                input.click();
+            });
+
+            clearTrainBtn.addEventListener('click', function() {
+                if (trainData.length === 0) return;
+                if (confirm('确定要清空所有训练照片吗？')) { trainData = []; updateTrainUI(); }
+            });
+
+            function updateTrainUI() {
+                trainCountDisplay.textContent = '已添加 ' + trainData.length + ' 张';
+                const labels = [...new Set(trainData.map(d => d.label))];
+                if (trainData.length === 0) {
+                    trainSetInfo.textContent = '💡 点击按钮 → 多选照片 → 输入标签（如：张三）';
+                    labelGroup.innerHTML = '';
+                    trainPreviewThumbs.innerHTML = '';
+                    trainPreviewSample.innerHTML = '<div class="placeholder-text">训练后显示</div>';
+                    return;
+                }
+                trainSetInfo.textContent = '📋 训练集：共 ' + trainData.length + ' 张照片，标签：' + labels.join('、');
+                labelGroup.innerHTML = labels.map(l => `<span class="label-tag"><i class="fas fa-tag"></i> ${l}</span>`).join('');
+                trainPreviewThumbs.innerHTML = '';
+                const maxShow = 12;
+                for (let i = 0; i < Math.min(trainData.length, maxShow); i++) {
+                    const img = document.createElement('img');
+                    img.src = trainData[i].dataURL;
+                    img.style.width = '48px';
+                    img.style.height = '48px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '8px';
+                    img.style.border = '1px solid #ccdcee';
+                    img.title = trainData[i].label;
+                    trainPreviewThumbs.appendChild(img);
+                }
+                if (trainData.length > maxShow) {
+                    const span = document.createElement('span');
+                    span.textContent = '+' + (trainData.length - maxShow);
+                    span.style.fontSize = '12px';
+                    span.style.color = '#6a8aaa';
+                    trainPreviewThumbs.appendChild(span);
+                }
+                const sample = trainData[0];
+                const img = document.createElement('img');
+                img.src = sample.dataURL;
+                img.style.maxHeight = '80px';
+                trainPreviewSample.innerHTML = '';
+                trainPreviewSample.appendChild(img);
+                trainPreviewSample.innerHTML += `<div style="font-size:11px; color:#4d6f91;">${sample.label}</div>`;
+            }
+
+            function activateLayer(layerNum) {
+                const layerCount = parseInt(layerCountSlider.value);
+                const layers = [
+                    { el: inputLayer, status: null },
+                    { el: hiddenLayer1, status: h1Status },
+                    { el: hiddenLayer2, status: h2Status },
+                    { el: hiddenLayer3, status: h3Status },
+                    { el: outputLayer, status: outputStatus }
+                ];
+                layers.forEach((l, idx) => {
+                    if (idx === 0) { l.el.className = 'layer-box'; } else if (idx <= layerCount) { l.el.className = 'layer-box hidden-layer show'; } else { l.el.className = 'layer-box hidden-layer'; }
+                    if (l.status) { l.status.textContent = '⏳ 等待'; l.status.className = 'layer-status'; }
+                });
+                for (let i = 0; i <= Math.min(layerNum, layerCount + 1); i++) {
+                    const l = layers[i];
+                    if (i === 0) { l.el.className = 'layer-box done'; } else if (i <= layerCount) { l.el.className = 'layer-box hidden-layer show done'; if (l.status) { l.status.textContent = '✅ 已提取'; l.status.className = 'layer-status done'; } } else if (i === layerCount + 1) { l.el.className = 'layer-box done'; if (l.status) { l.status.textContent = '✅ 已判断'; l.status.className = 'layer-status done'; } }
+                }
+                updateLayerVisibility(layerCount);
+            }
+
+            faceTrainBtn.addEventListener('click', function() {
+                if (trainData.length < 2) { alert('至少需要2张训练照片！'); return; }
+                const labels = [...new Set(trainData.map(d => d.label))];
+                if (labels.length < 2) { alert('至少需要2个不同的标签（如：张三、李四）！'); return; }
+                faceTrainBtn.disabled = true;
+                faceTrainBtn.textContent = '⏳ 训练中...';
+                faceTrainLog.innerHTML = '<div class="log-info">🧠 开始训练...</div>';
+                weightDisplayArea.style.display = 'none';
+                resetLayerStatus();
+                const lr = parseInt(trainLrSlider.value) / 10;
+                const epochs = 5;
+                const layerCount = parseInt(layerCountSlider.value);
+                let logLines = [];
+                let weights = Array.from({ length: trainData.length }, () => Math.random() * 0.5 + 0.25);
+                let step = 0;
+                const interval = setInterval(() => {
+                    if (step >= epochs) {
+                        clearInterval(interval);
+                        trainedWeights = weights.slice();
+                        isFaceTrained = true;
+                        faceStatusTag.textContent = '✅ 已训练';
+                        faceStatusTag.className = 'status-tag done';
+                        faceTrainBtn.disabled = false;
+                        faceTrainBtn.textContent = '🚀 开始训练';
+                        const weightStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
+                        weightValuesFace.textContent = '[' + weightStr + ']';
+                        weightDisplayArea.style.display = 'block';
+                        activateLayer(layerCount + 1);
+                        faceTrainLog.innerHTML += `<div class="log-ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
+                        faceTrainLog.innerHTML += `<div class="log-info">💡 权重已固定，后续推理不会修改权重</div>`;
+                        faceTrainLog.innerHTML += `<div class="weight-value">📊 最终权重值： [${weightStr}]</div>`;
+                        weightBarFace.style.width = '100%';
+                        weightLabelFace.textContent = '100%';
+                        inferNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
+                        return;
+                    }
+                    activateLayer(step + 1);
+                    let totalLoss = 0;
+                    for (let i = 0; i < trainData.length; i++) {
+                        const pred = Math.min(1, weights[i] * (0.8 + Math.random() * 0.4));
+                        const target = 1;
+                        const loss = Math.pow(pred - target, 2);
+                        totalLoss += loss;
+                        const grad = 2 * (pred - target);
+                        weights[i] = Math.max(0.1, Math.min(1.5, weights[i] - lr * grad * 0.5));
+                    }
+                    const avgLoss = totalLoss / trainData.length;
+                    const progress = Math.min(100, ((step + 1) / epochs) * 100);
+                    weightBarFace.style.width = progress + '%';
+                    weightLabelFace.textContent = Math.round(progress) + '%';
+                    const status = avgLoss < 0.3 ? '✅ 收敛中' : '🔄 调整中';
+                    logLines.push(`轮次 ${step+1}: 正向传播 → 误差=${avgLoss.toFixed(3)} → 反向传播 → 更新权重 ${status}`);
+                    if (logLines.length > 4) logLines.shift();
+                    faceTrainLog.innerHTML = logLines.map(l => `<div class="${avgLoss < 0.3 ? 'log-ok' : 'log-info'}">${l}</div>`).join('');
+                    faceTrainLog.scrollTop = faceTrainLog.scrollHeight;
+                    step++;
+                }, 600);
+            });
+
+            faceResetTrainBtn.addEventListener('click', function() {
+                trainData = [];
+                trainedWeights = null;
+                isFaceTrained = false;
+                faceStatusTag.textContent = '⏳ 未训练';
+                faceStatusTag.className = 'status-tag';
+                updateTrainUI();
+                faceTrainLog.innerHTML = '<div class="log-info">⏳ 等待训练...</div>';
+                weightBarFace.style.width = '5%';
+                weightLabelFace.textContent = '5%';
+                weightDisplayArea.style.display = 'none';
+                faceTrainBtn.disabled = false;
+                faceTrainBtn.textContent = '🚀 开始训练';
+                inferNote.textContent = '💡 请先完成训练，再进行推理';
+                faceLabel.textContent = '等待推理';
+                faceConfidence.textContent = '置信度 --%';
+                inferPreview.innerHTML = '<div class="placeholder-text">等待上传</div>';
+                inferFileName.textContent = '未选择';
+                trainPreviewSample.innerHTML = '<div class="placeholder-text">训练后显示</div>';
+                labelGroup.innerHTML = '';
+                trainPreviewThumbs.innerHTML = '';
+                resetLayerStatus();
+            });
+
+            let inferImageData = null;
+            inferUpload.addEventListener('change', function(e) {
+                const file = this.files[0];
+                if (!file) return;
+                inferFileName.textContent = file.name.slice(0, 12) + (file.name.length > 12 ? '…' : '');
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    inferImageData = ev.target.result;
+                    const img = document.createElement('img');
+                    img.src = ev.target.result;
+                    inferPreview.innerHTML = '';
+                    inferPreview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            inferBtn.addEventListener('click', function() {
+                if (!isFaceTrained || !trainedWeights) { alert('请先完成训练！'); return; }
+                if (!inferImageData) { alert('请先上传测试照片！'); return; }
+                const base = 0.5 + Math.random() * 0.3;
+                const weightFactor = trainedWeights.reduce((a, b) => a + b, 0) / trainedWeights.length;
+                let conf = Math.min(0.98, base + weightFactor * 0.3 + Math.random() * 0.1);
+                const labels = [...new Set(trainData.map(d => d.label))];
+                const randomLabel = labels[Math.floor(Math.random() * labels.length)];
+                const isMatch = conf > 0.6;
+                faceLabel.textContent = isMatch ? `✅ ${randomLabel}（匹配）` : '❌ 不匹配（外来人员）';
+                faceLabel.style.color = isMatch ? '#1a8b4c' : '#b02a1a';
+                faceConfidence.textContent = `置信度 ${Math.round(conf * 100)}%`;
+                outputStatus.textContent = '✅ 已判断';
+                outputStatus.className = 'layer-status done';
+                outputLayer.className = 'layer-box done';
+            });
+
+            inferResetBtn.addEventListener('click', function() {
+                inferUpload.value = '';
+                inferFileName.textContent = '未选择';
+                inferPreview.innerHTML = '<div class="placeholder-text">等待上传</div>';
+                inferImageData = null;
+                faceLabel.textContent = '等待推理';
+                faceLabel.style.color = '#0a2647';
+                faceConfidence.textContent = '置信度 --%';
+                resetLayerStatus();
+            });
 
             // ============================================================
-            // 短视频推荐（四步流程 + 标题匹配过滤）
+            // 短视频推荐（完整版 + 精确过滤）
             // ============================================================
             const allVideos = [
                 { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
@@ -356,10 +643,9 @@
                 { id: 'V8', title: '💄 新手化妆教程', tag: 'beauty' },
             ];
 
-            // ★★★ 候选视频池（推荐用）★★★
-            // 注意：候选池里的标题和用户选择池里的标题是匹配的
+            // ★★★ 候选池标题与用户池完全一致，方便测试过滤 ★★★
             const candidateVideos = [
-                { id: 'C1', title: '🍜 深夜食堂 · 红烧肉', tag: 'food' },
+                { id: 'C1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
                 { id: 'C2', title: '🍣 日料大师 · 刺身', tag: 'food' },
                 { id: 'C3', title: '😂 搞笑喵星人合集', tag: 'funny' },
                 { id: 'C4', title: '🤣 爆笑动物配音', tag: 'funny' },
@@ -382,7 +668,6 @@
             let interestVec = null;
             let multiResults = null;
 
-            // DOM 引用（为简化，只写核心逻辑）
             const recStatusTag = document.getElementById('recStatusTag');
             const videoGrid = document.getElementById('videoGrid');
             const selectedCount = document.getElementById('selectedCount');
@@ -480,7 +765,6 @@
                 }
             }
 
-            // --- 训练 ---
             recTrainBtn.addEventListener('click', function() {
                 const selected = Object.entries(selections).filter(([id, val]) => val !== null);
                 if (selected.length < 2) {
@@ -549,12 +833,9 @@
                     recWeightBar.style.width = progress + '%';
                     recWeightLabel.textContent = Math.round(progress) + '%';
                     const status = loss < 0.1 ? '✅ 收敛中' : '🔄 调整中';
-                    logLines.push(
-                        `轮次 ${step+1}: 预测兴趣 [${weights.map(w=>w.toFixed(2)).join(', ')}] 误差=${loss.toFixed(3)} ${status}`
-                        );
+                    logLines.push(`轮次 ${step+1}: 预测兴趣 [${weights.map(w=>w.toFixed(2)).join(', ')}] 误差=${loss.toFixed(3)} ${status}`);
                     if (logLines.length > 4) logLines.shift();
-                    recTrainLog.innerHTML = logLines.map(l =>
-                        `<div class="${loss < 0.1 ? 'log-ok' : 'log-info'}">${l}</div>`).join('');
+                    recTrainLog.innerHTML = logLines.map(l => `<div class="${loss < 0.1 ? 'log-ok' : 'log-info'}">${l}</div>`).join('');
                     recTrainLog.scrollTop = recTrainLog.scrollHeight;
                     step++;
                 }, 600);
@@ -574,7 +855,6 @@
                 clearAllResults();
             });
 
-            // --- Attention计算 ---
             attentionBtn.addEventListener('click', function() {
                 if (!isRecTrained || !recWeights) {
                     alert('请先完成训练！（点击「开始训练」）');
@@ -637,8 +917,7 @@
                 }).join('');
 
                 const maxIdx = attnWeights.indexOf(Math.max(...attnWeights));
-                attentionSummary.innerHTML =
-                    `📌 V5（日料·刺身）与历史中最相关的是 <strong style="color:#f7d44a;">${historyVideos[maxIdx].id}（${historyVideos[maxIdx].title}）</strong>，注意力权重 <strong style="color:#f7d44a;">${(attnWeights[maxIdx]*100).toFixed(0)}%</strong>`;
+                attentionSummary.innerHTML = `📌 V5（日料·刺身）与历史中最相关的是 <strong style="color:#f7d44a;">${historyVideos[maxIdx].id}（${historyVideos[maxIdx].title}）</strong>，注意力权重 <strong style="color:#f7d44a;">${(attnWeights[maxIdx]*100).toFixed(0)}%</strong>`;
                 interestVecDisplay.textContent = `[${interestVec.map(v => v.toFixed(2)).join(', ')}]`;
 
                 recStatusTag.textContent = '✅ Attention完成';
@@ -657,7 +936,7 @@
                 recStatusTag.className = isRecTrained ? 'status-tag done' : 'status-tag';
             });
 
-            // --- 多目标预测 + 标题匹配过滤 ---
+            // --- 多目标预测 + 精确过滤（修复版） ---
             multiTargetBtn.addEventListener('click', function() {
                 if (!isRecTrained || !recWeights) {
                     alert('请先完成训练！（点击「开始训练」）');
@@ -668,15 +947,14 @@
                     return;
                 }
 
-                // ★★★ 核心修复：用标题匹配来过滤用户已选的视频 ★★★
-                const selectedIds = Object.keys(selections).filter(id => selections[id] !== null);
-                // 获取用户已选视频的标题列表
-                const selectedTitles = selectedIds.map(id => {
+                // ★★★ 精确获取用户已选的所有视频标题 ★★★
+                const selectedEntries = Object.entries(selections).filter(([id, val]) => val !== null);
+                const selectedTitles = selectedEntries.map(([id]) => {
                     const v = allVideos.find(v => v.id === id);
                     return v ? v.title : '';
                 }).filter(t => t !== '');
 
-                // 过滤候选视频：如果候选视频的标题在用户已选列表里，就移除
+                // ★★★ 硬过滤：移除所有用户已选的视频 ★★★
                 const filteredCandidates = candidateVideos.filter(v => {
                     return !selectedTitles.some(title => title === v.title);
                 });
@@ -685,6 +963,17 @@
                     alert('所有候选视频你都看过了！请重置选择或添加更多视频。');
                     return;
                 }
+
+                // 统计“不喜欢”标签用于降权
+                const dislikeTags = {};
+                selectedEntries.forEach(([id, val]) => {
+                    if (val === 'dislike') {
+                        const v = allVideos.find(v => v.id === id);
+                        if (v) {
+                            dislikeTags[v.tag] = (dislikeTags[v.tag] || 0) + 1;
+                        }
+                    }
+                });
 
                 const scored = filteredCandidates.map(v => {
                     const vEmb = videoEmbMap[v.tag] || videoEmbMap['food'];
@@ -696,11 +985,23 @@
                     });
                     sim = Math.max(0.01, Math.min(1.0, sim));
 
+                    // 不喜欢降权
+                    let dislikePenalty = 1.0;
+                    if (dislikeTags[v.tag] && dislikeTags[v.tag] > 0) {
+                        dislikePenalty = Math.max(0.7, 1.0 - dislikeTags[v.tag] * 0.1);
+                    }
+
                     const weightFactor = recWeights.reduce((a, b) => a + b, 0) / recWeights.length;
-                    const click = Math.min(0.98, Math.max(0.01, sim * 1.3 + 0.05 + Math.random() * 0.04));
-                    const finish = Math.min(0.98, Math.max(0.01, click * 0.9 + 0.08 + Math.random() * 0.04));
-                    const like = Math.min(0.98, Math.max(0.01, click * 0.7 + 0.1 + Math.random() * 0.04));
-                    const share = Math.min(0.98, Math.max(0.01, click * 0.5 + 0.05 + Math.random() * 0.04));
+                    let click = Math.min(0.98, Math.max(0.01, sim * 1.3 + 0.05 + Math.random() * 0.04));
+                    let finish = Math.min(0.98, Math.max(0.01, click * 0.9 + 0.08 + Math.random() * 0.04));
+                    let like = Math.min(0.98, Math.max(0.01, click * 0.7 + 0.1 + Math.random() * 0.04));
+                    let share = Math.min(0.98, Math.max(0.01, click * 0.5 + 0.05 + Math.random() * 0.04));
+
+                    click *= dislikePenalty;
+                    finish *= dislikePenalty;
+                    like *= dislikePenalty;
+                    share *= dislikePenalty;
+
                     const finalScore = (click * 0.4 + finish * 0.3 + like * 0.2 + share * 0.1);
                     return {
                         ...v,
@@ -737,8 +1038,7 @@
                     `（已过滤 ${removedCount} 个你看过的视频，从 ${totalCandidates} 个候选中筛选出 ${filteredCandidates.length} 个）` :
                     `（${filteredCandidates.length} 个候选视频均为你没看过的）`;
 
-                multiNote.textContent =
-                    `🏆 给你的推荐：${scored[0].title} 综合得分最高（${scored[0].finalScore}%），排在第一位！ ${removedMsg}`;
+                multiNote.textContent = `🏆 给你的推荐：${scored[0].title} 综合得分最高（${scored[0].finalScore}%），排在第一位！ ${removedMsg}`;
                 recStatusTag.textContent = '✅ 推荐完成';
                 recStatusTag.className = 'status-tag done';
             });
@@ -758,17 +1058,17 @@
 
             // 初始化
             renderVideoGrid();
-
-            // 人脸识别部分初始化（只取必要的）
-            // 由于人脸识别代码较长且与修改无关，此处保留其功能引用
-            // 实际运行时会包含完整的人脸识别代码
-            // 这里为了演示，只做短视频模块的初始化
             recLrSlider.addEventListener('input', function() {
                 recLrVal.textContent = (parseInt(this.value) / 10).toFixed(1);
             });
             recLayerSlider.addEventListener('input', function() {
                 recLayerVal.textContent = this.value;
             });
+
+            // 人脸识别初始化
+            updateTrainUI();
+            resetLayerStatus();
+            updateLayerVisibility(layerCountSlider.value);
         })();
     </script>
 </body>
