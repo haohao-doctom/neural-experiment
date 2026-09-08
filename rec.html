@@ -8,7 +8,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background: #f0f4fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .container { max-width: 1000px; width: 100%; background: white; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,20,40,0.12); padding: 32px 36px 40px; }
+        .container { max-width: 1100px; width: 100%; background: white; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,20,40,0.12); padding: 32px 36px 40px; }
         .back { display: inline-block; color: #2b7be4; text-decoration: none; font-size: 14px; margin-bottom: 16px; }
         .back:hover { text-decoration: underline; }
         .title { font-size: 24px; font-weight: 600; color: #0a2647; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -29,8 +29,9 @@
         .btn-outline { background: transparent; border: 1px solid #b0c8e3; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 10px; margin-top: 6px; }
-        .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
-        @media (max-width: 600px) { .video-grid { grid-template-columns: 1fr; } }
+        .video-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
+        @media (max-width: 768px) { .video-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 500px) { .video-grid { grid-template-columns: 1fr; } }
         .video-card { background: white; border: 2px solid #e2ecf5; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; flex-wrap: wrap; }
         .video-card:hover { border-color: #b0c8e3; }
         .video-card.selected { border-color: #1a5fb0; background: #edf4fe; }
@@ -181,7 +182,7 @@
 <script>
 (function() {
     // ============================================================
-    // 短视频推荐
+    // 视频数据（12个用户选择 + 12个候选，一一对应）
     // ============================================================
     const allVideos = [
         { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
@@ -191,16 +192,26 @@
         { id: 'V5', title: '🍣 日料大师 · 刺身', tag: 'food' },
         { id: 'V6', title: '🤣 爆笑动物配音', tag: 'funny' },
         { id: 'V7', title: '🏀 NBA每日集锦', tag: 'sports' },
-        { id: 'V8', title: '💄 新手化妆教程', tag: 'beauty' }
+        { id: 'V8', title: '💄 新手化妆教程', tag: 'beauty' },
+        { id: 'V9', title: '🥘 川味火锅 · 麻辣锅底', tag: 'food' },
+        { id: 'V10', title: '🎭 整蛊朋友合集', tag: 'funny' },
+        { id: 'V11', title: '⚽ 欧冠精彩进球', tag: 'sports' },
+        { id: 'V12', title: '💅 美甲DIY教程', tag: 'beauty' },
     ];
 
     const candidateVideos = [
         { id: 'C1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
         { id: 'C2', title: '🍣 日料大师 · 刺身', tag: 'food' },
-        { id: 'C3', title: '😂 搞笑喵星人合集', tag: 'funny' },
-        { id: 'C4', title: '🤣 爆笑动物配音', tag: 'funny' },
-        { id: 'C5', title: '🏀 NBA每日集锦', tag: 'sports' },
-        { id: 'C6', title: '💄 新手化妆教程', tag: 'beauty' }
+        { id: 'C3', title: '🥘 川味火锅 · 麻辣锅底', tag: 'food' },
+        { id: 'C4', title: '😂 搞笑喵星人合集', tag: 'funny' },
+        { id: 'C5', title: '🤣 爆笑动物配音', tag: 'funny' },
+        { id: 'C6', title: '🎭 整蛊朋友合集', tag: 'funny' },
+        { id: 'C7', title: '🏀 NBA每日集锦', tag: 'sports' },
+        { id: 'C8', title: '⚽ 欧冠精彩进球', tag: 'sports' },
+        { id: 'C9', title: '🎾 网球大满贯集锦', tag: 'sports' },
+        { id: 'C10', title: '💄 新手化妆教程', tag: 'beauty' },
+        { id: 'C11', title: '💅 美甲DIY教程', tag: 'beauty' },
+        { id: 'C12', title: '🧴 护肤成分科普', tag: 'beauty' },
     ];
 
     const tagKeys = ['food', 'funny', 'sports', 'beauty'];
@@ -516,7 +527,7 @@
             if (val === 'dislike') {
                 const v = allVideos.find(v => v.id === id);
                 if (v) {
-                    const cleanTitle = v.title.replace(/[🍜🏀😂🤣💄]/g, '').trim();
+                    const cleanTitle = v.title.replace(/[🍜🏀😂🤣💄🥘🎭⚽💅🧴]/g, '').trim();
                     const parts = cleanTitle.split('·');
                     if (parts.length > 1) {
                         dislikeKeywords.push(parts[1].trim());
