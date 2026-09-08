@@ -182,7 +182,7 @@
 <script>
 (function() {
     // ============================================================
-    // 视频数据（12个用户选择 + 12个候选，一一对应）
+    // 视频数据
     // ============================================================
     const allVideos = [
         { id: 'V1', title: '🍜 美食教程 · 红烧肉', tag: 'food' },
@@ -422,7 +422,7 @@
         clearAllResults();
     });
 
-    // ===== Attention =====
+    // ===== Attention（修复：使用所有选过的视频，不限4条） =====
     attentionBtn.addEventListener('click', function() {
         if (!isRecTrained || !recWeights) {
             alert('请先完成训练！（点击「开始训练」）');
@@ -434,11 +434,11 @@
             return;
         }
 
+        // ★★★ 修复：使用所有选过的视频，不再限制4条 ★★★
         const historyVideos = [];
         for (let [id, val] of selected) {
             const v = allVideos.find(v => v.id === id);
             if (v) historyVideos.push(v);
-            if (historyVideos.length >= 4) break;
         }
         if (historyVideos.length < 2) {
             alert('请至少选择 2 个视频作为历史！');
@@ -504,7 +504,7 @@
         recStatusTag.className = isRecTrained ? 'status-tag done' : 'status-tag';
     });
 
-    // ===== 多目标预测 =====
+    // ===== 多目标预测（修复：V5自身也要被过滤） =====
     multiTargetBtn.addEventListener('click', function() {
         if (!isRecTrained || !recWeights) {
             alert('请先完成训练！（点击「开始训练」）');
@@ -520,6 +520,9 @@
             const v = allVideos.find(v => v.id === id);
             return v ? v.title : '';
         }).filter(t => t !== '');
+
+        // 收集所有被选的视频ID（用于过滤V5自身）
+        const selectedIds = selectedEntries.map(([id]) => id);
 
         // 不喜欢关键词硬过滤
         const dislikeKeywords = [];
@@ -538,11 +541,18 @@
             }
         });
 
+        // ★★★ 修复：过滤时同时检查 V5 自身 ★★★
+        // 候选视频 V5 对应的是 C2（日料大师·刺身）
         const filteredCandidates = candidateVideos.filter(v => {
+            // 1. 标题匹配过滤（用户已选的视频）
             if (selectedTitles.some(title => title === v.title)) return false;
+            // 2. 不喜欢关键词过滤
             for (let kw of dislikeKeywords) {
                 if (v.title.includes(kw)) return false;
             }
+            // 3. ★★★ 新增：如果候选视频的标题与 V5 相同，且用户选过 V5，则过滤 ★★★
+            // V5 是日料大师·刺身，对应 C2
+            if (v.id === 'C2' && selectedIds.includes('V5')) return false;
             return true;
         });
 
