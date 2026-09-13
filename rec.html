@@ -56,7 +56,6 @@
         .weight-display .label { color: #8ab8e6; font-size: 12px; }
         .highlight-box { background: #0a1a2f; border-radius: 12px; padding: 12px 16px; margin-top: 8px; }
         .highlight-box .hl-title { color: #8ab8e6; font-size: 13px; margin-bottom: 4px; }
-        .highlight-box .hl-content { color: #b0d4f0; font-size: 14px; }
         .multi-target-grid { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 400px; overflow-y: auto; }
         .multi-target-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: #142a44; border-radius: 8px; font-size: 13px; flex-wrap: wrap; gap: 4px; }
         .multi-target-row .rank { font-weight: 600; color: #6a9ac0; min-width: 24px; }
@@ -71,6 +70,26 @@
         .footer { text-align: center; margin-top: 24px; color: #5b7999; font-size: 13px; border-top: 1px solid #e2ecf7; padding-top: 18px; }
         .status-tag { font-size: 12px; padding: 2px 12px; border-radius: 30px; background: #e9edf4; color: #6a8aaa; }
         .status-tag.done { background: #b0e6c0; color: #1a6a3a; }
+        /* ★★★ 新增：内部权重展示区 ★★★ */
+        .internal-weight-box {
+            background: #0f2440;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            border-left: 3px solid #f7d44a;
+            display: none;
+        }
+        .internal-weight-box .iw-label {
+            color: #8ab8e6;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .internal-weight-box .iw-value {
+            color: #f7d44a;
+            font-weight: bold;
+            font-size: 15px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -86,7 +105,7 @@
     <!-- 步骤0 -->
     <div class="input-area">
         <div class="section-title"><i class="fas fa-hand-pointer"></i> 步骤0：选择你看过的视频</div>
-        <div style="font-size:13px; color:#4d6f91; margin-bottom:6px;">💡 点击卡片选择，再点 👍 喜欢 或 👎 不喜欢（共 50 个视频，可滚动查看）</div>
+        <div style="font-size:13px; color:#4d6f91; margin-bottom:6px;">💡 点击卡片选择，再点 👍 或 👎（共 50 个视频，可滚动查看）</div>
         <div class="video-grid" id="videoGrid"></div>
         <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <span class="selected-count" id="selectedCount">已选 0 个视频</span>
@@ -116,10 +135,17 @@
             <div class="track"><div class="fill" id="recWeightBar"></div></div>
             <span style="font-size:12px; color:#4d6f91;" id="recWeightLabel">5%</span>
         </div>
+
+        <!-- ★★★ 新增：内部权重展示区（真正的权重） ★★★ -->
+        <div class="internal-weight-box" id="recInternalWeightBox">
+            <div class="iw-label">📊 内部权重（4 个类别的重要性系数，训练中更新）：</div>
+            <div class="iw-value" id="recInternalWeightValues">—</div>
+        </div>
+
+        <!-- 输出置信分值 -->
         <div class="weight-display" id="recWeightDisplay">
-            <span class="label">📊 训练完成！网络权重：</span>
+            <span class="label">📊 模型输出置信分值（Logits，4 个类别）：</span>
             <span id="recWeightValues">[0.72, 0.55, 0.08, 0.05]</span>
-            <div style="font-size:11px; color:#5a8aaa; margin-top:2px;">👆 代表网络对“美食、搞笑、体育、美妆”的重要性判断</div>
         </div>
     </div>
 
@@ -149,10 +175,8 @@
 <script>
 (function() {
     // ============================================================
-    // 视频数据（自动生成 50 个候选 + 50 个用户选择，一一对应）
+    // 视频数据（自动生成 50 个候选 + 50 个用户选择）
     // ============================================================
-
-    // 每类视频的标题模板
     const titleTemplates = {
         food: [
             '🍜 美食教程 · 红烧肉', '🍣 日料大师 · 刺身', '🥘 川味火锅 · 麻辣锅底',
@@ -180,7 +204,6 @@
         ]
     };
 
-    // 自动生成用户选择池和候选池
     const allVideos = [];
     const candidateVideos = [];
     const tagKeys = ['food', 'funny', 'sports', 'beauty'];
@@ -190,24 +213,13 @@
 
     tagKeys.forEach(tag => {
         titleTemplates[tag].forEach(title => {
-            // 用户选择池
-            allVideos.push({
-                id: 'V' + videoId,
-                title: title,
-                tag: tag
-            });
-            // 候选池（标题完全一致，方便过滤）
-            candidateVideos.push({
-                id: 'C' + candidateId,
-                title: title,
-                tag: tag
-            });
+            allVideos.push({ id: 'V' + videoId, title: title, tag: tag });
+            candidateVideos.push({ id: 'C' + candidateId, title: title, tag: tag });
             videoId++;
             candidateId++;
         });
     });
 
-    // 视频 Embedding 表
     const videoEmbMap = {
         'food': [0.70, 0.20, 0.05, 0.05],
         'funny': [0.15, 0.70, 0.10, 0.05],
@@ -241,6 +253,10 @@
     const rankDisplay = document.getElementById('rankDisplay');
     const rankList = document.getElementById('rankList');
     const rankNote = document.getElementById('rankNote');
+
+    // ★★★ 新增：内部权重展示区 DOM 引用 ★★★
+    const recInternalWeightBox = document.getElementById('recInternalWeightBox');
+    const recInternalWeightValues = document.getElementById('recInternalWeightValues');
 
     // ===== 渲染 =====
     function renderVideoGrid() {
@@ -338,6 +354,7 @@
         recTrainBtn.textContent = '⏳ 训练中...';
         recTrainLog.innerHTML = '<div class="info">🧠 开始训练推荐网络...</div>';
         recWeightDisplay.style.display = 'none';
+        recInternalWeightBox.style.display = 'none';
         clearAllResults();
 
         const lr = parseInt(recLrSlider.value) / 10;
@@ -355,12 +372,20 @@
                 recStatusTag.className = 'status-tag done';
                 recTrainBtn.disabled = false;
                 recTrainBtn.textContent = '🚀 开始训练';
-                const wStr = recWeights.map(w => w.toFixed(2)).join(', ');
-                recWeightValues.textContent = '[' + wStr + ']';
+
+                // ★★★ 核心改动：显示内部权重（真正的权重） ★★★
+                const internalWStr = recWeights.map(w => w.toFixed(2)).join(', ');
+                recInternalWeightValues.textContent = '[' + internalWStr + ']';
+                recInternalWeightBox.style.display = 'block';
+
+                // 输出置信分值（模拟）
+                const outputScores = recWeights.map(w => (w * 0.9 + Math.random() * 0.1).toFixed(2));
+                recWeightValues.textContent = '[' + outputScores.join(', ') + ']';
                 recWeightDisplay.style.display = 'block';
+
                 recTrainLog.innerHTML += `<div class="ok">✅ 训练完成！网络权重已更新</div>`;
                 recTrainLog.innerHTML += `<div class="info">💡 权重已固定，后续推理不会修改权重</div>`;
-                recTrainLog.innerHTML += `<div class="gold">📊 最终权重值： [${wStr}]</div>`;
+                recTrainLog.innerHTML += `<div class="gold">📊 内部权重值： [${internalWStr}]</div>`;
                 recWeightBar.style.width = '100%';
                 recWeightLabel.textContent = '100%';
                 return;
@@ -399,12 +424,13 @@
         recWeightBar.style.width = '5%';
         recWeightLabel.textContent = '5%';
         recWeightDisplay.style.display = 'none';
+        recInternalWeightBox.style.display = 'none';
         recTrainBtn.disabled = false;
         recTrainBtn.textContent = '🚀 开始训练';
         clearAllResults();
     });
 
-    // ===== 推荐排序（每条候选视频分别与用户历史做 Attention） =====
+    // ===== 推荐排序 =====
     rankBtn.addEventListener('click', function() {
         if (!isRecTrained || !recWeights) {
             alert('请先完成训练！（点击「开始训练」）');
@@ -417,7 +443,6 @@
             return;
         }
 
-        // 用户选过的历史视频
         const historyVideos = [];
         for (let [id, val] of selectedEntries) {
             const v = allVideos.find(x => x.id === id);
@@ -425,13 +450,11 @@
         }
         const historyVecs = historyVideos.map(h => videoEmbMap[h.tag] || videoEmbMap['food']);
 
-        // 用户已选标题（用于过滤）
         const selectedTitles = selectedEntries.map(([id]) => {
             const v = allVideos.find(x => x.id === id);
             return v ? v.title : '';
         }).filter(t => t !== '');
 
-        // 不喜欢关键词
         const dislikeKeywords = [];
         selectedEntries.forEach(([id, val]) => {
             if (val === 'dislike') {
@@ -448,7 +471,6 @@
             }
         });
 
-        // 1. 过滤候选视频（移除用户已选和不喜欢）
         const filteredCandidates = candidateVideos.filter(v => {
             if (selectedTitles.some(title => title === v.title)) return false;
             for (let kw of dislikeKeywords) {
@@ -462,23 +484,17 @@
             return;
         }
 
-        // 2. 对每条候选视频，分别做 Attention
         const scored = filteredCandidates.map(candidate => {
             const candidateVec = videoEmbMap[candidate.tag] || videoEmbMap['food'];
-
-            // 候选视频与所有历史视频算相似度
             const rawScores = historyVecs.map(hv => {
                 let sum = 0;
                 for (let i = 0; i < 4; i++) sum += candidateVec[i] * hv[i];
                 return sum;
             });
-
-            // Softmax 归一化
             const expScores = rawScores.map(s => Math.exp(s * 2.5));
             const sumExp = expScores.reduce((a, b) => a + b, 0);
             const attnWeights = expScores.map(e => e / sumExp);
 
-            // 加权聚合兴趣向量
             const interestVec = [0, 0, 0, 0];
             for (let i = 0; i < historyVideos.length; i++) {
                 for (let j = 0; j < 4; j++) {
@@ -486,7 +502,6 @@
                 }
             }
 
-            // DNN 打分
             let sim = 0;
             tagKeys.forEach((k, idx) => {
                 if (interestVec[idx] !== undefined && candidateVec[idx] !== undefined) {
@@ -501,26 +516,19 @@
             const share = Math.min(0.98, Math.max(0.01, click * 0.5 + 0.05 + Math.random() * 0.04));
             const finalScore = (click * 0.4 + finish * 0.3 + like * 0.2 + share * 0.1);
 
-            const maxAttnIdx = attnWeights.indexOf(Math.max(...attnWeights));
-            const mostRelated = historyVideos[maxAttnIdx] || historyVideos[0];
-
             return {
                 ...candidate,
                 click,
                 finish,
                 like,
                 share,
-                finalScore: Math.round(Math.max(0, Math.min(100, finalScore * 100))),
-                attnWeights: attnWeights,
-                mostRelated: mostRelated
+                finalScore: Math.round(Math.max(0, Math.min(100, finalScore * 100)))
             };
         });
 
-        // 3. 按综合得分排序
         scored.sort((a, b) => b.finalScore - a.finalScore);
         rankedResults = scored;
 
-        // 4. 显示结果（只显示前20条，避免太长）
         rankDisplay.style.display = 'block';
         const topResults = scored.slice(0, 20);
         rankList.innerHTML = topResults.map((item, idx) => {
