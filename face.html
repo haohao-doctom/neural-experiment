@@ -77,6 +77,26 @@
         .control-row input[type=range] { flex: 1; min-width: 100px; max-width: 200px; height: 4px; -webkit-appearance: none; background: #1a3a5f; border-radius: 4px; }
         .control-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #f7d44a; border-radius: 50%; cursor: pointer; }
         .ctrl-hint { font-size: 11px; color: #5a8aaa; margin-left: 6px; }
+        /* ★★★ 新增：内部权重展示区 ★★★ */
+        .internal-weight-box {
+            background: #0f2440;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            border-left: 3px solid #f7d44a;
+            display: none;
+        }
+        .internal-weight-box .iw-label {
+            color: #8ab8e6;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .internal-weight-box .iw-value {
+            color: #f7d44a;
+            font-weight: bold;
+            font-size: 15px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -167,9 +187,17 @@
             <div class="track"><div class="fill" id="weightBarFill"></div></div>
             <span style="font-size:12px; color:#4d6f91;" id="weightLabel">5%</span>
         </div>
+
+        <!-- ★★★ 新增：内部权重展示区（真正的权重） ★★★ -->
+        <div class="internal-weight-box" id="internalWeightBox">
+            <div class="iw-label">📊 内部权重（每张训练照片的重要性系数）：</div>
+            <div class="iw-value" id="internalWeightValues">—</div>
+        </div>
+
+        <!-- 输出置信分值 -->
         <div class="weight-display" id="weightDisplay">
-            <span class="label">📊 训练完成！最终权重值：</span>
-            <span id="weightValues">[0.92, 0.78, 1.13, 0.45]</span>
+            <span class="label">📊 模型输出置信分值（Logits）：</span>
+            <span id="weightValues">[0.92, 0.94]</span>
         </div>
     </div>
 
@@ -231,6 +259,10 @@
     const resultLabel = document.getElementById('resultLabel');
     const resultConfidence = document.getElementById('resultConfidence');
     const resultNote = document.getElementById('resultNote');
+
+    // ★★★ 新增：内部权重展示区 DOM 引用 ★★★
+    const internalWeightBox = document.getElementById('internalWeightBox');
+    const internalWeightValues = document.getElementById('internalWeightValues');
 
     // 隐藏层控制
     const layerCountSlider = document.getElementById('layerCountSlider');
@@ -372,6 +404,7 @@
             weightBarFill.style.width = '5%';
             weightLabel.textContent = '5%';
             weightDisplay.style.display = 'none';
+            internalWeightBox.style.display = 'none';
             resultLabel.textContent = '等待推理';
             resultConfidence.textContent = '置信度 --%';
             resultLabel.style.color = '#0a2647';
@@ -425,6 +458,7 @@
         trainBtn.textContent = '⏳ 训练中...';
         trainLog.innerHTML = '<div class="info">🧠 开始训练...</div>';
         weightDisplay.style.display = 'none';
+        internalWeightBox.style.display = 'none';
         resetLayerStatus();
 
         const lr = parseInt(lrSlider.value) / 10;
@@ -444,13 +478,21 @@
                 trainBtn.textContent = '🚀 开始训练';
                 faceStatusTag.textContent = '✅ 已训练';
                 faceStatusTag.className = 'status-tag done';
-                const wStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
-                weightValues.textContent = '[' + wStr + ']';
+
+                // ★★★ 核心改动：显示真正的内部权重 ★★★
+                const internalWStr = trainedWeights.map(w => w.toFixed(2)).join(', ');
+                internalWeightValues.textContent = '[' + internalWStr + ']';
+                internalWeightBox.style.display = 'block';
+
+                // 输出置信分值（模拟）
+                const outputScores = labels.map(() => (0.85 + Math.random() * 0.13).toFixed(2));
+                weightValues.textContent = '[' + outputScores.join(', ') + ']';
                 weightDisplay.style.display = 'block';
+
                 activateLayer(layerCount + 1);
                 trainLog.innerHTML += `<div class="ok">✅ 训练完成！网络已学会识别 ${labels.join('、')}</div>`;
                 trainLog.innerHTML += `<div class="info">💡 权重已固定，后续推理不会修改权重</div>`;
-                trainLog.innerHTML += `<div class="gold">📊 最终权重值： [${wStr}]</div>`;
+                trainLog.innerHTML += `<div class="gold">📊 内部权重值： [${internalWStr}]</div>`;
                 weightBarFill.style.width = '100%';
                 weightLabel.textContent = '100%';
                 resultNote.textContent = '✅ 训练完成！可以使用训练好的权重进行推理比对';
@@ -491,6 +533,7 @@
         weightBarFill.style.width = '5%';
         weightLabel.textContent = '5%';
         weightDisplay.style.display = 'none';
+        internalWeightBox.style.display = 'none';
         trainBtn.disabled = false;
         trainBtn.textContent = '🚀 开始训练';
         resultLabel.textContent = '等待推理';
